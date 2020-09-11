@@ -467,7 +467,7 @@ static IpcAuthInterface *GetIpcAuthInterface(void)
     IpcAuthInterface *ipcAuth = NULL;
     IUnknown *iUnknown = SAMGR_GetInstance()->GetFeatureApi(PERMISSION_SERVICE, IPCAUTH);
     if (iUnknown == NULL) {
-        HILOG_ERROR(HILOG_MODULE_SAMGR, "Get IpcAuthInterface: IUnknown NULL");
+        HILOG_ERROR(HILOG_MODULE_SAMGR, "Get IpcAuthInterface: Unknown NULL");
         return NULL;
     }
     (void)iUnknown->QueryInterface(iUnknown, DEFAULT_VERSION, (void **)&ipcAuth);
