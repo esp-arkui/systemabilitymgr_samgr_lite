@@ -100,7 +100,7 @@ int SAMGR_RegisterQueryIdentity(QueryIdentity query)
 
 SvcIdentity SAMGR_GetRemoteIdentity(const char *service, const char *feature)
 {
-    if (g_queryID != NULL) {
+    if (service != NULL && g_queryID != NULL) {
         return g_queryID(service, feature);
     }
     SvcIdentity identity = {INVALID_INDEX, INVALID_INDEX, INVALID_INDEX};

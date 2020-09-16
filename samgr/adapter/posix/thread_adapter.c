@@ -64,13 +64,13 @@ ThreadId THREAD_Create(Runnable run, void *argv, const ThreadAttr *attr)
     pthread_attr_t threadAttr;
     pthread_attr_init(&threadAttr);
     pthread_attr_setstacksize(&threadAttr, (attr->stackSize | MIN_STACK_SIZE));
-    pthread_attr_setinheritsched(&threadAttr, PTHREAD_EXPLICIT_SCHED);
 #ifdef SAMGR_LINUX_ADAPTER
     struct sched_param sched = {attr->priority};
 #else
+    pthread_attr_setinheritsched(&threadAttr, PTHREAD_EXPLICIT_SCHED);
     struct sched_param sched = {PRI_BUTT - attr->priority};
-#endif
     pthread_attr_setschedpolicy(&threadAttr, SCHED_RR);
+#endif
     pthread_attr_setschedparam(&threadAttr, &sched);
     pthread_key_create(&g_localKey, NULL);
     pthread_t threadId = 0;

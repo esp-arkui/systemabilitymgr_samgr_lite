@@ -100,6 +100,9 @@ int SAMGR_RegisterServiceApi(const char *service, const char *feature, const Ide
 
 IUnknown *SAMGR_FindServiceApi(const char *service, const char *feature)
 {
+    if (service == NULL) {
+        return NULL;
+    }
     SaName key = {service, feature};
     // the proxy already exits.
     int index = VECTOR_FindByKey(&g_server.clients, &key);

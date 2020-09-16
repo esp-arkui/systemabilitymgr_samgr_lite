@@ -59,6 +59,9 @@ int __attribute__((weak)) SAMGR_RegisterServiceApi(const char *service, const ch
 IUnknown *__attribute__((weak)) SAMGR_FindServiceApi(const char *service, const char *feature)
 {
     InitializeRegistry();
+    if (service == NULL) {
+        return NULL;
+    }
     SaName key = {service, feature};
     // the proxy already exits.
     int index = VECTOR_FindByKey(&g_remoteRegister.clients, &key);

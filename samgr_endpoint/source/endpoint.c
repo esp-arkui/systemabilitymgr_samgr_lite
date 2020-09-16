@@ -156,11 +156,10 @@ int SAMGR_ProcPolicy(const Endpoint *endpoint, const SaName *saName, int token)
         HILOG_INFO(HILOG_MODULE_SAMGR, "Register server sa<%s, %s> id<%u, %u> retry:%d ret:%d!",
                    saName->service, saName->feature, saInfo.handle, saInfo.token, retry, ret);
         ret = AddPolicyToRouter(endpoint, &saInfo, policy, policyNum);
+        SAMGR_Free(policy);
         if (ret == EC_SUCCESS) {
-            SAMGR_Free(policy);
             break;
         }
-        SAMGR_Free(policy);
         sleep(REGISTER_RETRY_INTERVAL);
     }
     return ret;
