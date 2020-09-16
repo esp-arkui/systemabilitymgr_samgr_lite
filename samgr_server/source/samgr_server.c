@@ -197,8 +197,8 @@ static int ProcEndpoint(SamgrServer *server, int32 option, void *origin, IpcIo *
         handle.handle = identity.handle;
         handle.deadId = INVALID_INDEX;
         (void)SASTORA_SaveHandleByPid(&server->store, handle);
-        (void)UnRegisteDeathCallback(identity, handle.deadId);
-        (void)RegisteDeathCallback(server->endpoint->context, identity, OnEndpointExit, (void*)((uintptr_t)pid),
+        (void)UnregisterDeathCallback(identity, handle.deadId);
+        (void)RegisterDeathCallback(server->endpoint->context, identity, OnEndpointExit, (void*)((uintptr_t)pid),
                                    &handle.deadId);
     }
     MUTEX_Unlock(server->mtx);

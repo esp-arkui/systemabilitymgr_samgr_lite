@@ -224,8 +224,8 @@ static void *Receive(void *argv)
         ret = endpoint->registerEP(endpoint->context, &endpoint->identity);
         if (ret == EC_SUCCESS) {
             SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
-            (void)UnRegisteDeathCallback(samgr, endpoint->deadId);
-            (void)RegisteDeathCallback(endpoint->context, samgr, OnSamgrServerExit, endpoint, &endpoint->deadId);
+            (void)UnregisterDeathCallback(samgr, endpoint->deadId);
+            (void)RegisterDeathCallback(endpoint->context, samgr, OnSamgrServerExit, endpoint, &endpoint->deadId);
             break;
         }
         ++retry;
@@ -437,8 +437,8 @@ static int OnSamgrServerExit(const IpcContext *context, void *ipcMsg, IpcIo *dat
     identity.handle = SAMGR_HANDLE;
     identity.token = SAMGR_TOKEN;
     identity.cookie = SAMGR_COOKIE;
-    (void)UnRegisteDeathCallback(identity, endpoint->deadId);
-    (void)RegisteDeathCallback(endpoint->context, identity, OnSamgrServerExit, endpoint, &endpoint->deadId);
+    (void)UnregisterDeathCallback(identity, endpoint->deadId);
+    (void)RegisterDeathCallback(endpoint->context, identity, OnSamgrServerExit, endpoint, &endpoint->deadId);
     int remain = RegisterRemoteFeatures(endpoint);
     HILOG_INFO(HILOG_MODULE_SAMGR, "Reconnect and register finished! remain<%d> iunknown!", remain);
     return EC_SUCCESS;
