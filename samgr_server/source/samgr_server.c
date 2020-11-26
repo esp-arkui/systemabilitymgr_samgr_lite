@@ -187,10 +187,7 @@ static int ProcEndpoint(SamgrServer *server, int32 option, void *origin, IpcIo *
     int index = SASTORA_FindHandleByPid(&g_server.store, pid, &handle);
     if (index == INVALID_INDEX) {
         SvcIdentity identity = {(uint32)INVALID_INDEX, (uint32)INVALID_INDEX, (uint32)INVALID_INDEX};
-        identity.handle = IpcIoPopUint32(req);
-        if (identity.handle == (uint32)INVALID_INDEX) { // generate handle
-            (void)GenServiceHandle(&identity, GetCallingTid(origin));
-        }
+        (void)GenServiceHandle(&identity, GetCallingTid(origin));
 
         handle.pid = pid;
         handle.uid = GetCallingUid(origin);
