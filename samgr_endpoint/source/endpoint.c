@@ -382,7 +382,6 @@ static int RegisterRemoteEndpoint(const IpcContext *context, SvcIdentity *identi
     IpcIoInit(&req, data, MAX_DATA_LEN, 0);
     IpcIoPushUint32(&req, RES_ENDPOINT);
     IpcIoPushUint32(&req, OP_POST);
-    IpcIoPushUint32(&req, identity->handle);
     uint8 retry = 0;
     while (retry < MAX_RETRY_TIMES) {
         ++retry;
