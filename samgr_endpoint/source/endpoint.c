@@ -427,15 +427,18 @@ static int OnSamgrServerExit(const IpcContext *context, void *ipcMsg, IpcIo *dat
         router->policyNum = 0;
     }
 
+    SvcIdentity old = endpoint->identity;
     while (endpoint->registerEP(endpoint->context, &endpoint->identity) != EC_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_SAMGR, "Reconnect to samgr server failed!");
         sleep(RETRY_INTERVAL);
     }
+    SvcIdentity new = endpoint->identity;
+    if (old.handle != new.handle || old.cookie != new.cookie || old.token != new.token) {
+        HILOG_ERROR(HILOG_MODULE_SAMGR, "Samgr server identity error!");
+        exit(-1);
+    }
 
-    SvcIdentity identity;
-    identity.handle = SAMGR_HANDLE;
-    identity.token = SAMGR_TOKEN;
-    identity.cookie = SAMGR_COOKIE;
+    SvcIdentity identity = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
     (void)UnregisterDeathCallback(identity, endpoint->deadId);
     (void)RegisterDeathCallback(endpoint->context, identity, OnSamgrServerExit, endpoint, &endpoint->deadId);
     int remain = RegisterRemoteFeatures(endpoint);
