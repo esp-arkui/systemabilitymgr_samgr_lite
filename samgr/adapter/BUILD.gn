@@ -19,7 +19,7 @@ config("samgr_adapter_public") {
   ]
 }
 
-if (ohos_kernel_type == "liteos_riscv" || ohos_kernel_type == "liteos_m") {
+if (ohos_kernel_type == "liteos_m") {
   static_library("samgr_adapter") {
     sources = [
       "cmsis/memory_adapter.c",
@@ -56,9 +56,7 @@ if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
       "-fPIC",
       "-Wall",
     ]
-    public_deps = [
-      "//third_party/bounds_checking_function:libsec_shared",
-    ]
+    public_deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
     defines = [ "_GNU_SOURCE" ]
     if (ohos_kernel_type == "linux") {
       defines += [ "SAMGR_LINUX_ADAPTER" ]
