@@ -73,10 +73,23 @@ ThreadId THREAD_Create(Runnable run, void *argv, const ThreadAttr *attr)
     pthread_attr_setinheritsched(&threadAttr, PTHREAD_EXPLICIT_SCHED);
 #ifdef SAMGR_LINUX_ADAPTER
     struct sched_param sched = {attr->priority};
+    int policy = SCHED_OTHER;
+    const int ROOT_UID = 0;
+    if (geteuid() == ROOT_UID) {
+       /*
+	* Real-time scheduling policy requires superuser privileges.
+	* Note: additionally, real-time thread can be scheduled before
+	*       normal thread even if it yields CPU using sched_yield().
+	*       To actually yield real-time thread one could
+	*       sleep() rather than yield().
+	*/
+        policy = SCHED_RR;
+    }
 #else
     struct sched_param sched = {PRI_BUTT - attr->priority};
+    int policy = SCHED_RR;
 #endif
-    pthread_attr_setschedpolicy(&threadAttr, SCHED_RR);
+    pthread_attr_setschedpolicy(&threadAttr, policy);
     pthread_attr_setschedparam(&threadAttr, &sched);
     (void) pthread_once(&g_localKeyOnce, KeyCreate);
     pthread_t threadId = 0;
