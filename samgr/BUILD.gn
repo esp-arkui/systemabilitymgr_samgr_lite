@@ -36,7 +36,7 @@ if (ohos_kernel_type == "liteos_m") {
 
     include_dirs = [
       "//base/hiviewdfx/interfaces/kits/hilog_lite",
-      "//kernel/liteos_m/components/cmsis",
+      "//kernel/liteos_m/kal/cmsis",
     ]
 
     public_deps = [

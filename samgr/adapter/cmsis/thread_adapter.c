@@ -14,7 +14,6 @@
  */
 #include "thread_adapter.h"
 #include "common.h"
-#include <los_task.h>
 #include <cmsis_os.h>
 
 extern void *osThreadGetArgument(void);
@@ -29,7 +28,7 @@ void MUTEX_Lock(MutexId mutex)
     if (mutex == NULL) {
         return;
     }
-    osMutexAcquire(mutex, LOS_WAIT_FOREVER);
+    osMutexAcquire(mutex, osWaitForever);
 }
 
 void MUTEX_Unlock(MutexId mutex)
@@ -42,12 +41,12 @@ void MUTEX_Unlock(MutexId mutex)
 
 void MUTEX_GlobalLock(void)
 {
-    LOS_TaskLock();
+    osKernelLock();
 }
 
 void MUTEX_GlobalUnlock(void)
 {
-    LOS_TaskUnlock();
+    osKernelUnlock();
 }
 
 ThreadId THREAD_Create(Runnable run, void *argv, const ThreadAttr *attr)
