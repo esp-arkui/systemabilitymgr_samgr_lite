@@ -31,7 +31,11 @@ if (ohos_kernel_type == "liteos_m") {
     public_configs = [ ":samgr_adapter_public" ]
     cflags = [ "-Wall" ]
 
-    include_dirs = [ "//kernel/liteos_m/kal" ]
+    include_dirs = [
+      "//kernel/liteos_m/kal/",
+      "//kernel/liteos_m/kal/cmsis",
+      "//kernel/liteos_m/kal/posix/include/malloc.h",
+    ]
   }
 }
 
