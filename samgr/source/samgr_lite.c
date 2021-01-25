@@ -418,7 +418,7 @@ static void AddTaskPool(ServiceImpl *service, TaskConfig *cfg, const char *name)
             service->taskPool = samgr->sharedPool[pos];
             if (SAMGR_ReferenceTaskPool(service->taskPool) == NULL) {
                 HILOG_ERROR(HILOG_MODULE_SAMGR, "shared task:%p pri:%d ref is full", service->taskPool, cfg->priority);
-                samgr->sharedPool[pos] = NULL;
+                service->taskPool = NULL;
             }
         }
             break;
