@@ -14,7 +14,6 @@
  */
 #include "lock_free_queue.h"
 #include <ohos_errno.h>
-#include <pthread.h>
 #include <securec.h>
 #include <memory_adapter.h>
 

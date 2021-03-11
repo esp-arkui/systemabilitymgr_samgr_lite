@@ -12,29 +12,27 @@
 # limitations under the License.
 
 source_set("client") {
-    sources = [
-        "source/remote_register.c",
-    ]
+  sources = [ "source/remote_register.c" ]
 
-    cflags = [
-        "-fPIC",
-        "-Wall"
-    ]
+  cflags = [
+    "-fPIC",
+    "-Wall",
+  ]
 
-    include_dirs = [
-        "../samgr_endpoint/source",
-        "//foundation/distributedschedule/interfaces/kits/samgr_lite/samgr",
-        "//foundation/distributedschedule/interfaces/kits/samgr_lite/registry",
-        "//utils/native/lite/include",
-        "//kernel/liteos_a/kernel/include",
-        "//kernel/liteos_a/kernel/common",
-        "//third_party/bounds_checking_function/include",
-        "//base/security/services/iam_lite/include",
-    ]
+  include_dirs = [
+    "../samgr_endpoint/source",
+    "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
+    "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
+    "//utils/native/lite/include",
+    "//kernel/liteos_a/kernel/include",
+    "//kernel/liteos_a/kernel/common",
+    "//third_party/bounds_checking_function/include",
+    "//base/security/permission/services/permission_lite/include",
+  ]
 
-    public_deps = [
-        "//foundation/distributedschedule/services/samgr_lite/samgr_endpoint:endpoint_source",
-        "//third_party/bounds_checking_function:libsec_shared",
-        "//foundation/communication/frameworks/ipc_lite:liteipc_adapter",
-    ]
+  public_deps = [
+    "//foundation/communication/ipc_lite:liteipc_adapter",
+    "//foundation/distributedschedule/samgr_lite/samgr_endpoint:endpoint_source",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
 }

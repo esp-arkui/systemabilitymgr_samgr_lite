@@ -18,6 +18,7 @@
 #include <ohos_errno.h>
 #include <service.h>
 #include <log.h>
+#include "policy_define.h"
 #include "iproxy_server.h"
 #include "memory_adapter.h"
 #include "thread_adapter.h"
@@ -28,12 +29,17 @@
 #define LOG_TAG "Samgr"
 #define LOG_DOMAIN 0xD001800
 
+#ifdef LITE_LINUX_BINDER_IPC
+#define MAX_STACK_SIZE 0x100000
+#else
 #define MAX_STACK_SIZE 0x1000
+#endif
 #define MAX_OBJECT_NUM 5
 #define MAX_RETRY_TIMES 3
 #define RETRY_INTERVAL 5
 #define MAX_REGISTER_RETRY_TIMES 10
 #define REGISTER_RETRY_INTERVAL 2
+#define MAX_POLICY_NUM 8
 
 #ifndef MAX_BUCKET_RATE
 #define MAX_BUCKET_RATE 1000
@@ -43,6 +49,13 @@
 #define MAX_BURST_RATE (MAX_BUCKET_RATE + (MAX_BUCKET_RATE >> 1))
 #endif
 
+#ifndef MAX_SYSCAP_NUM
+#define MAX_SYSCAP_NUM 512
+#endif
+
+#ifndef MAX_SYSCAP_NAME_LEN
+#define MAX_SYSCAP_NAME_LEN 64
+#endif
 #define SAMGR_SERVICE "samgr"
 
 typedef struct Router {
@@ -66,16 +79,9 @@ static boolean SearchFixedPolicy(uid_t callingUid, PolicyTrans policy);
 static int AddPolicyToRouter(const Endpoint *endpoint, const SvcIdentity *saInfo,
                              const PolicyTrans *policy, uint32 policyNum);
 static int RegisterRemoteEndpoint(const IpcContext *context, SvcIdentity *identity);
-static RegisterIdentity g_registerID = NULL;
-int SAMGR_RegisterRegisterIdentity(RegisterIdentity action)
-{
-    if (action == NULL || g_registerID != NULL) {
-        return EC_INVALID;
-    }
-
-    g_registerID = action;
-    return EC_SUCCESS;
-}
+static int RegisterIdentity(const IpcContext *context, const SaName *saName, SvcIdentity *saInfo,
+                            PolicyTrans **policy, uint32 *policyNum);
+static void GetRemotePolicy(IpcIo *reply, PolicyTrans **policy, uint32 *policyNum);
 
 Endpoint *SAMGR_CreateEndpoint(const char *name, RegisterEndpoint registry)
 {
@@ -135,6 +141,144 @@ int SAMGR_AddRouter(Endpoint *endpoint, const SaName *saName, const Identity *id
     return index;
 }
 
+int32 SAMGR_AddSysCap(const Endpoint *endpoint, const char *sysCap, BOOL isReg)
+{
+    if (endpoint == NULL) {
+        return EC_INVALID;
+    }
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "SAMGR_AddSysCap begin");
+    IpcIo req;
+    uint8 data[MAX_DATA_LEN];
+    IpcIoInit(&req, data, MAX_DATA_LEN, 0);
+    IpcIoPushUint32(&req, RES_SYSCAP);
+    IpcIoPushUint32(&req, OP_PUT);
+    IpcIoPushString(&req, sysCap);
+    IpcIoPushBool(&req, isReg);
+
+    IpcIo reply;
+    void *replyBuf = NULL;
+    SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
+    int ret = Transact(endpoint->context, samgr, INVALID_INDEX, &req, &reply,
+        LITEIPC_FLAG_DEFAULT, (uintptr_t *)&replyBuf);
+    ret = -ret;
+    if (ret == LITEIPC_OK) {
+        ret = IpcIoPopInt32(&reply);
+    }
+
+    if (replyBuf != NULL) {
+        FreeBuffer(endpoint, replyBuf);
+    }
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "SAMGR_AddSysCap ret = %d", ret);
+
+    return ret;
+}
+
+int32 SAMGR_GetSysCap(const Endpoint *endpoint, const char *sysCap, BOOL *isReg)
+{
+    if (endpoint == NULL) {
+        return EC_INVALID;
+    }
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "SAMGR_GetSysCap begin");
+    IpcIo req;
+    uint8 data[MAX_DATA_LEN];
+    IpcIoInit(&req, data, MAX_DATA_LEN, 0);
+    IpcIoPushUint32(&req, RES_SYSCAP);
+    IpcIoPushUint32(&req, OP_GET);
+    IpcIoPushString(&req, sysCap);
+
+    IpcIo reply;
+    void *replyBuf = NULL;
+    SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
+    int ret = Transact(endpoint->context, samgr, INVALID_INDEX, &req, &reply,
+        LITEIPC_FLAG_DEFAULT, (uintptr_t *)&replyBuf);
+    ret = -ret;
+    *isReg = FALSE;
+    if (ret == LITEIPC_OK) {
+        ret = IpcIoPopInt32(&reply);
+    }
+    if (ret == EC_SUCCESS) {
+        *isReg = IpcIoPopBool(&reply);
+    }
+    if (replyBuf != NULL) {
+        FreeBuffer(endpoint, replyBuf);
+    }
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "SAMGR_GetSysCap ret = %d", ret);
+    return ret;
+}
+
+static int SendGetAllSysCapsRequest(const Endpoint *endpoint, uint32 startIdx, IpcIo *reply, void **replyBuf)
+{
+    IpcIo req;
+    uint8 data[MAX_DATA_LEN];
+    IpcIoInit(&req, data, MAX_DATA_LEN, 0);
+    IpcIoPushUint32(&req, RES_SYSCAP);
+    IpcIoPushUint32(&req, OP_ALL);
+    IpcIoPushUint32(&req, startIdx);
+    SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
+    int ret = Transact(endpoint->context, samgr, INVALID_INDEX, &req, reply,
+        LITEIPC_FLAG_DEFAULT, (uintptr_t *)replyBuf);
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "SendGetAllSysCapsRequest startIdx:%d, ret:%d!", startIdx, ret);
+    return -ret;
+}
+
+static int32 ParseGetAllSysCapsReply(IpcIo *reply, char sysCaps[MAX_SYSCAP_NUM][MAX_SYSCAP_NAME_LEN],
+                                     int32 *sysCapNum, BOOL *isEnd, uint32 *nextRequestIdx)
+{
+    int32 ret = IpcIoPopInt32(reply);
+    if (ret != EC_SUCCESS) {
+        *isEnd = TRUE;
+        return ret;
+    }
+    *isEnd = IpcIoPopBool(reply);
+    *nextRequestIdx = IpcIoPopUint32(reply);
+    uint32 size = IpcIoPopUint32(reply);
+    size = ((size > MAX_SYSCAP_NUM) ? MAX_SYSCAP_NUM : size);
+    int cnt = *sysCapNum;
+    for (int i = 0; i < size; i++) {
+        int len = 0;
+        char *sysCap = (char *)IpcIoPopString(reply, &len);
+        if (sysCap == NULL || len == 0) {
+            continue;
+        }
+        if (strcpy_s(sysCaps[cnt], sizeof(sysCaps[cnt]), sysCap) != EC_SUCCESS) {
+            continue;
+        }
+        cnt++;
+    }
+    *sysCapNum = cnt;
+
+    return ret;
+}
+
+int32 SAMGR_GetSystemCapabilities(const Endpoint *endpoint,
+    char sysCaps[MAX_SYSCAP_NUM][MAX_SYSCAP_NAME_LEN], int32 *sysCapNum)
+{
+    if (sysCapNum == NULL) {
+        return EC_INVALID;
+    }
+    *sysCapNum = 0;
+    if (endpoint == NULL) {
+        return EC_INVALID;
+    }
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "SAMGR_GetSystemCapabilities begin");
+    IpcIo reply;
+    void *replyBuf = NULL;
+    int startIdx = 0;
+    BOOL isEnd = TRUE;
+    int ret;
+    do {
+        ret = SendGetAllSysCapsRequest(endpoint, startIdx, &reply, &replyBuf);
+        if (ret == EC_SUCCESS) {
+            ret = ParseGetAllSysCapsReply(&reply, sysCaps, sysCapNum, &isEnd, &startIdx);
+        }
+        if (replyBuf != NULL) {
+            FreeBuffer(endpoint, replyBuf);
+        }
+    } while (isEnd == FALSE && ret == EC_SUCCESS);
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "SAMGR_GetSystemCapabilities ret = %d", ret);
+    return ret;
+}
+
 int SAMGR_ProcPolicy(const Endpoint *endpoint, const SaName *saName, int token)
 {
     if (endpoint == NULL || saName == NULL || token == INVALID_INDEX) {
@@ -148,7 +292,7 @@ int SAMGR_ProcPolicy(const Endpoint *endpoint, const SaName *saName, int token)
         ++retry;
         PolicyTrans *policy = NULL;
         uint32 policyNum = 0;
-        ret = g_registerID(saName->service, saName->feature, &saInfo, &policy, &policyNum);
+        ret = RegisterIdentity(endpoint->context, saName,  &saInfo, &policy, &policyNum);
         if (ret != EC_SUCCESS || policy == NULL) {
             SAMGR_Free(policy);
             continue;
@@ -156,11 +300,10 @@ int SAMGR_ProcPolicy(const Endpoint *endpoint, const SaName *saName, int token)
         HILOG_INFO(HILOG_MODULE_SAMGR, "Register server sa<%s, %s> id<%u, %u> retry:%d ret:%d!",
                    saName->service, saName->feature, saInfo.handle, saInfo.token, retry, ret);
         ret = AddPolicyToRouter(endpoint, &saInfo, policy, policyNum);
+        SAMGR_Free(policy);
         if (ret == EC_SUCCESS) {
-            SAMGR_Free(policy);
             break;
         }
-        SAMGR_Free(policy);
         sleep(REGISTER_RETRY_INTERVAL);
     }
     return ret;
@@ -320,8 +463,8 @@ static void HandleIpc(const Request *request, const Response *response)
     IpcIo req;
     IpcIoInitFromMsg(&req, ipcMsg);
     IpcIo reply;
-    uint8 data[MAX_DATA_LEN];
-    IpcIoInit(&reply, data, MAX_DATA_LEN, MAX_OBJECT_NUM);
+    uint8 data[IPC_IO_DATA_MAX];
+    IpcIoInit(&reply, data, IPC_IO_DATA_MAX, MAX_OBJECT_NUM);
     router->proxy->Invoke(router->proxy, request->msgValue, ipcMsg, &req, &reply);
     uint32_t flag = 0;
     GetFlag(ipcMsg, &flag);
@@ -347,12 +490,41 @@ static IServerProxy *GetIServerProxy(const Router *router)
     return router->proxy;
 }
 
+static int RegisterIdentity(const IpcContext *context, const SaName *saName, SvcIdentity *saInfo,
+                            PolicyTrans **policy, uint32 *policyNum)
+{
+    IpcIo req;
+    uint8 data[MAX_DATA_LEN];
+    IpcIoInit(&req, data, MAX_DATA_LEN, 0);
+    IpcIoPushUint32(&req, RES_FEATURE);
+    IpcIoPushUint32(&req, OP_PUT);
+    IpcIoPushString(&req, saName->service);
+    IpcIoPushBool(&req, saName->feature == NULL);
+    if (saName->feature != NULL) {
+        IpcIoPushString(&req, saName->feature);
+    }
+    IpcIoPushUint32(&req, saInfo->token);
+    IpcIo reply;
+    void *replyBuf = NULL;
+    SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
+    int ret = Transact(context, samgr, INVALID_INDEX, &req, &reply, LITEIPC_FLAG_DEFAULT, (uintptr_t *)&replyBuf);
+    ret = -ret;
+    if (ret == LITEIPC_OK) {
+        ret = IpcIoPopInt32(&reply);
+    }
+    if (ret == EC_SUCCESS) {
+        saInfo = IpcIoPopSvc(&reply);
+        GetRemotePolicy(&reply, policy, policyNum);
+    }
+    if (replyBuf != NULL) {
+        FreeBuffer(context, replyBuf);
+    }
+    return ret;
+}
+
 static int RegisterRemoteFeatures(Endpoint *endpoint)
 {
     int nums = 0;
-    if (g_registerID == NULL) {
-        return nums;
-    }
     int size = VECTOR_Size(&endpoint->routers);
     int i;
     SvcIdentity identity;
@@ -364,8 +536,8 @@ static int RegisterRemoteFeatures(Endpoint *endpoint)
 
         identity.handle = endpoint->identity.handle;
         identity.token = i;
-        int ret = g_registerID(router->saName.service, router->saName.feature, &identity,
-                               &(router->policy), &(router->policyNum));
+        int ret = RegisterIdentity(endpoint->context, &(router->saName), &identity, &(router->policy),
+                                   &(router->policyNum));
         if (ret == EC_SUCCESS) {
             ++nums;
         }
@@ -444,6 +616,47 @@ static int OnSamgrServerExit(const IpcContext *context, void *ipcMsg, IpcIo *dat
     int remain = RegisterRemoteFeatures(endpoint);
     HILOG_INFO(HILOG_MODULE_SAMGR, "Reconnect and register finished! remain<%d> iunknown!", remain);
     return EC_SUCCESS;
+}
+
+static void GetRemotePolicy(IpcIo *reply, PolicyTrans **policy, uint32 *policyNum)
+{
+    if (reply == NULL) {
+        return;
+    }
+    uint32 i;
+    uint32 j;
+    *policyNum = IpcIoPopUint32(reply);
+    if (*policyNum > MAX_POLICY_NUM) {
+        *policyNum = MAX_POLICY_NUM;
+    }
+    SAMGR_Free(*policy);
+    if (*policyNum == 0) {
+        *policy = NULL;
+        return;
+    }
+    *policy = (PolicyTrans *)SAMGR_Malloc(sizeof(PolicyTrans) * (*policyNum));
+    if (*policy == NULL) {
+        return;
+    }
+    for (i = 0; i < *policyNum; i++) {
+        (*policy)[i].type = IpcIoPopInt32(reply);
+        switch ((*policy)[i].type) {
+            case RANGE:
+                (*policy)[i].uidMin = IpcIoPopInt32(reply);
+                (*policy)[i].uidMax = IpcIoPopInt32(reply);
+                break;
+            case FIXED:
+                for (j = 0; j < UID_SIZE; j++) {
+                    (*policy)[i].fixedUid[j] = IpcIoPopInt32(reply);
+                }
+                break;
+            case BUNDLENAME:
+                (*policy)[i].fixedUid[0] = IpcIoPopInt32(reply);
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 static boolean JudgePolicy(uid_t callingUid, const PolicyTrans *policy, uint32 policyNum)

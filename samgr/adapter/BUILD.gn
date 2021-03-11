@@ -14,7 +14,7 @@
 config("samgr_adapter_public") {
   include_dirs = [
     "./",
-    "//foundation/distributedschedule/interfaces/kits/samgr_lite/samgr",
+    "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
     "//utils/native/lite/include",
   ]
 }
@@ -34,6 +34,7 @@ if (ohos_kernel_type == "liteos_m") {
     include_dirs = [
       "//kernel/liteos_m/kal/",
       "//kernel/liteos_m/kal/cmsis",
+      "//kernel/liteos_m/kal/posix/include/malloc.h",
     ]
   }
 }

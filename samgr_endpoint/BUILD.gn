@@ -12,58 +12,62 @@
 # limitations under the License.
 
 config("endpoint_public") {
-    include_dirs = [
-        "../samgr/adapter",
-        "//foundation/distributedschedule/interfaces/kits/samgr_lite/samgr",
-        "//foundation/distributedschedule/interfaces/kits/samgr_lite/registry",
-        "//utils/native/lite/include",
-        "//foundation/communication/interfaces/kits/ipc_lite",
-        "//third_party/bounds_checking_function/include",
-        "//base/security/services/iam_lite/ipc_auth/include",
-        "//kernel/liteos_a/kernel/include/",
-        "//kernel/liteos_a/kernel/common",
-    ]
+  include_dirs = [
+    "../samgr/adapter",
+    "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
+    "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
+    "//utils/native/lite/include",
+    "//foundation/communication/ipc_lite/interfaces/kits",
+    "//third_party/bounds_checking_function/include",
+    "//base/security/permission/services/permission_lite/ipc_auth/include",
+    "//kernel/liteos_a/kernel/include/",
+    "//kernel/liteos_a/kernel/common",
+  ]
+}
+
+config("endpoint_internal") {
+  include_dirs = [ "../samgr/registry" ]
 }
 
 source_set("endpoint_source") {
-    sources = [
-        "source/client_factory.c",
-        "source/default_client.c",
-        "source/endpoint.c",
-        "source/token_bucket.c"
-    ]
+  sources = [
+    "source/client_factory.c",
+    "source/default_client.c",
+    "source/endpoint.c",
+    "source/token_bucket.c",
+  ]
 
-    cflags = [
-        "-fPIC",
-        "-Wall"
-    ]
+  cflags = [
+    "-fPIC",
+    "-Wall",
+  ]
 
-    if (ohos_kernel_type == "linux") {
-        defines = ["LITE_LINUX_BINDER_IPC"]
-    }
+  if (ohos_kernel_type == "linux") {
+    defines = [ "LITE_LINUX_BINDER_IPC" ]
+  }
 
-    public_configs = [":endpoint_public"]
+  configs += [ ":endpoint_internal" ]
 
-    public_deps = [
-        "//third_party/bounds_checking_function:libsec_shared",
-        "//foundation/communication/frameworks/ipc_lite:liteipc_adapter",
-        "//base/hiviewdfx/frameworks/hilog_lite/featured:hilog_shared",
-    ]
+  public_configs = [ ":endpoint_public" ]
+
+  public_deps = [
+    "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
+    "//foundation/communication/ipc_lite:liteipc_adapter",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
 }
 
 source_set("store_source") {
-    sources = [
-        "source/sa_store.c",
-    ]
+  sources = [ "source/sa_store.c" ]
 
-    cflags = [
-        "-fPIC",
-        "-Wall"
-    ]
+  cflags = [
+    "-fPIC",
+    "-Wall",
+  ]
 
-    public_configs = [":endpoint_public"]
+  configs += [ ":endpoint_internal" ]
 
-    public_deps = [
-        "//third_party/bounds_checking_function:libsec_shared",
-    ]
+  public_configs = [ ":endpoint_public" ]
+
+  public_deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
 }

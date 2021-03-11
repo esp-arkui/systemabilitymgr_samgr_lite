@@ -16,16 +16,17 @@
 #include <ohos_errno.h>
 #include <string.h>
 #include <log.h>
+#include <service_registry.h>
 #include "client_factory.h"
 #include "iproxy_client.h"
 #include "memory_adapter.h"
 #include "thread_adapter.h"
+#include "endpoint.h"
 
 #undef LOG_TAG
 #undef LOG_DOMAIN
 #define LOG_TAG "Samgr"
 #define LOG_DOMAIN 0xD001800
-
 typedef struct IClientHeader IClientHeader;
 typedef struct IDefaultClient IDefaultClient;
 typedef struct IClientEntry IClientEntry;
@@ -51,13 +52,14 @@ static int AddRef(IUnknown *iUnknown);
 static int Release(IUnknown *proxy);
 static int ProxyInvoke(IClientProxy *proxy, int funcId, IpcIo *request, IOwner owner, INotify notify);
 static int OnServiceExit(const IpcContext *context, void *ipcMsg, IpcIo *data, void *argv);
+static SvcIdentity QueryIdentity(const IpcContext *context, const char *service, const char *feature);
 static const IClientEntry DEFAULT_ENTRY = {CLIENT_IPROXY_BEGIN, .Invoke = ProxyInvoke, IPROXY_END};
 static MutexId g_mutex = NULL;
-static QueryIdentity g_queryID = NULL;
 
-IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, const char *feature, SvcIdentity identity)
+IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, const char *feature)
 {
-    if (g_queryID == NULL) {
+    SvcIdentity identity = QueryIdentity(context, service, feature);
+    if (identity.handle == INVALID_INDEX) {
         return NULL;
     }
 
@@ -84,26 +86,20 @@ IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, con
     return GET_IUNKNOWN(*entry);
 }
 
-int SAMGR_RegisterQueryIdentity(QueryIdentity query)
-{
-    if (g_mutex == NULL) {
-        g_mutex = MUTEX_InitValue();
-    }
-
-    if (query == NULL || g_queryID != NULL) {
-        return EC_INVALID;
-    }
-
-    g_queryID = query;
-    return EC_SUCCESS;
-}
-
 SvcIdentity SAMGR_GetRemoteIdentity(const char *service, const char *feature)
 {
-    if (g_queryID != NULL) {
-        return g_queryID(service, feature);
-    }
     SvcIdentity identity = {INVALID_INDEX, INVALID_INDEX, INVALID_INDEX};
+    IUnknown *iUnknown = SAMGR_FindServiceApi(service, feature);
+    if (iUnknown == NULL) {
+        return identity;
+    }
+    IClientProxy *proxy = NULL;
+    if (iUnknown->QueryInterface(iUnknown, CLIENT_PROXY_VER, (void **)&proxy) != EC_SUCCESS || proxy == NULL) {
+        return identity;
+    }
+    struct IDefaultClient *client = GET_OBJECT(proxy, struct IDefaultClient, entry.iUnknown);
+    identity = client->header.target;
+    proxy->Release((IUnknown *)proxy);
     return identity;
 }
 
@@ -175,7 +171,7 @@ static int ProxyInvoke(IClientProxy *proxy, int funcId, IpcIo *request, IOwner o
     IDefaultClient *client = GET_OBJECT(proxy, IDefaultClient, entry.iUnknown);
     IClientHeader *header = &client->header;
     if (header->target.handle == INVALID_INDEX) {
-        header->target = g_queryID(header->key.service, header->key.feature);
+        header->target = QueryIdentity(header->context, header->key.service, header->key.feature);
         if (header->target.handle == INVALID_INDEX) {
             return EC_INVALID;
         }
@@ -210,6 +206,9 @@ static int OnServiceExit(const IpcContext *context, void *ipcMsg, IpcIo *data, v
     (void)data;
     IClientHeader *header = (IClientHeader *)argv;
     (void)UnregisterDeathCallback(header->target, header->deadId);
+#ifdef __LINUX__
+    BinderRelease(context, header->target.handle);
+#endif
     header->deadId = INVALID_INDEX;
     header->target.handle = INVALID_INDEX;
     header->target.token = INVALID_INDEX;
@@ -219,4 +218,40 @@ static int OnServiceExit(const IpcContext *context, void *ipcMsg, IpcIo *data, v
     }
     HILOG_ERROR(HILOG_MODULE_SAMGR, "Miss the remote service<%u, %u>!", header->target.handle, header->target.token);
     return EC_SUCCESS;
+}
+
+static SvcIdentity QueryIdentity(const IpcContext *context, const char *service, const char *feature)
+{
+    IpcIo req;
+    uint8 data[MAX_DATA_LEN];
+    IpcIoInit(&req, data, MAX_DATA_LEN, 0);
+    IpcIoPushUint32(&req, RES_FEATURE);
+    IpcIoPushUint32(&req, OP_GET);
+    IpcIoPushString(&req, service);
+    IpcIoPushBool(&req, feature == NULL);
+    if (feature != NULL) {
+        IpcIoPushString(&req, feature);
+    }
+    IpcIo reply;
+    void *replyBuf = NULL;
+    SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
+    int ret = Transact(context, samgr, INVALID_INDEX, &req, &reply, LITEIPC_FLAG_DEFAULT, (uintptr_t *)&replyBuf);
+    ret = (ret != LITEIPC_OK) ? EC_FAILURE : IpcIoPopInt32(&reply);
+    SvcIdentity target = {INVALID_INDEX, INVALID_INDEX, INVALID_INDEX};
+    if (ret == EC_SUCCESS) {
+        SvcIdentity *svc = IpcIoPopSvc(&reply);
+        if (svc != NULL) {
+#ifdef __LINUX__
+            BinderAcquire(svc->ipcContext, svc->handle);
+#endif
+            target = *svc;
+        }
+    }
+    if (ret == EC_PERMISSION) {
+        HILOG_INFO(HILOG_MODULE_SAMGR, "Cannot Access<%s, %s> No Permission!", service, feature);
+    }
+    if (replyBuf != NULL) {
+        FreeBuffer(context, replyBuf);
+    }
+    return target;
 }

@@ -28,9 +28,7 @@ struct SaName {
     const char *service;
     const char *feature;
 };
-typedef SvcIdentity (*QueryIdentity)(const char *service, const char *feature);
-int SAMGR_RegisterQueryIdentity(QueryIdentity query);
-IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, const char *feature, SvcIdentity identity);
+IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, const char *feature);
 SaName *SAMGR_GetSAName(const IUnknown *proxy);
 int SAMGR_CompareSAName(const SaName *key1, const SaName *key2);
 #ifdef __cplusplus

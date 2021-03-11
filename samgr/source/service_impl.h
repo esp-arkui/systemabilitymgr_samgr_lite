@@ -36,7 +36,6 @@ enum InitStatus {
 #ifndef MAX_FEATURE_NUM
 #define MAX_FEATURE_NUM 0x70
 #endif
-#pragma pack(1)
 typedef struct Operations Operations;
 struct Operations {
     uint8 abnormal;
@@ -54,7 +53,6 @@ struct ServiceImpl {
     uint8 inited;
     Operations ops;
 };
-#pragma pack()
 
 inline static BOOL IsInvalidService(Service *service)
 {

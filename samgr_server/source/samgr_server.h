@@ -27,8 +27,10 @@ extern "C" {
 #endif
 #endif
 #define SAMGR_SERVICE "samgr"
+#define MAX_SYSCAP_NAME_LEN 64
 typedef struct SamgrServer SamgrServer;
 typedef struct SamgrProxy SamgrProxy;
+typedef struct SysCapImpl SysCapImpl;
 typedef enum MsgId {
     MSG_CLEAN,
 }MsgId;
@@ -41,11 +43,16 @@ struct SamgrServer {
     INHERIT_IPROXY_ENTRY(SamgrProxy);
     Identity identity;
     Endpoint *samgr;
-    Endpoint *endpoint;
-    Vector clients;
     MutexId mtx;
     SAStore store;
     IpcAuthInterface *ipcAuth;
+    MutexId sysCapMtx;
+    Vector sysCapabilitys;
+};
+
+struct SysCapImpl {
+    char name[MAX_SYSCAP_NAME_LEN + 1];
+    BOOL isRegister;
 };
 
 #ifdef __cplusplus

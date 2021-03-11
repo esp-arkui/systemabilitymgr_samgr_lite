@@ -16,6 +16,8 @@
 #include <ohos_errno.h>
 #include <cmsis_os.h>
 
+#define MS_PER_SECOND 1000
+
 int32 WDT_Start(uint32 ms)
 {
     return WDT_Reset(ms);
@@ -39,5 +41,5 @@ uint64 SAMGR_GetProcessTime(void)
     if (ticksPerSecond == 0) {
         return 0;
     }
-    return (uint64)tick * 1000 / ticksPerSecond;
+    return (uint64)tick * MS_PER_SECOND / ticksPerSecond;
 }

@@ -12,31 +12,29 @@
 # limitations under the License.
 
 shared_library("server") {
-    sources = [
-        "source/samgr_server.c",
-    ]
+  sources = [ "source/samgr_server.c" ]
 
-    cflags = [
-        "-fPIC",
-        "-Wall"
-    ]
+  cflags = [
+    "-fPIC",
+    "-Wall",
+  ]
 
-    include_dirs = [
-        "../samgr_endpoint/source",
-        "//foundation/distributedschedule/interfaces/kits/samgr_lite/samgr",
-        "//foundation/distributedschedule/interfaces/kits/samgr_lite/registry",
-        "//utils/native/lite/include",
-        "//kernel/liteos_a/kernel/include/",
-        "//kernel/liteos_a/kernel/common",
-        "//third_party/bounds_checking_function/include",
-        "//base/security/interfaces/innerkits/iam_lite",
-        "//base/security/services/iam_lite/pms_base/include",
-    ]
+  include_dirs = [
+    "../samgr_endpoint/source",
+    "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
+    "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
+    "//utils/native/lite/include",
+    "//kernel/liteos_a/kernel/include/",
+    "//kernel/liteos_a/kernel/common",
+    "//third_party/bounds_checking_function/include",
+    "//base/security/permission/interfaces/innerkits/permission_lite",
+    "//base/security/permission/services/permission_lite/pms_base/include",
+  ]
 
-    public_deps = [
-        "//third_party/bounds_checking_function:libsec_shared",
-        "//foundation/distributedschedule/services/samgr_lite/samgr:samgr",
-        "//foundation/distributedschedule/services/samgr_lite/samgr_endpoint:store_source",
-        "//foundation/communication/frameworks/ipc_lite:liteipc_adapter",
-    ]
+  public_deps = [
+    "//foundation/communication/ipc_lite:liteipc_adapter",
+    "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+    "//foundation/distributedschedule/samgr_lite/samgr_endpoint:store_source",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
 }

@@ -16,7 +16,6 @@
 #define LITE_ENDPOINT_H
 
 #include <stddef.h>
-#include "policy_define.h"
 #include "common.h"
 #include "iproxy_server.h"
 #include "default_client.h"
@@ -37,6 +36,7 @@ extern "C" {
 typedef enum ResourceID {
     RES_ENDPOINT,
     RES_FEATURE,
+    RES_SYSCAP,
     RES_BUTT,
 } ResourceID;
 
@@ -45,10 +45,9 @@ typedef enum OptionID {
     OP_POST,
     OP_PUT,
     OP_DELETE,
+    OP_ALL,
 } OptionID;
 typedef struct Endpoint Endpoint;
-typedef int (*RegisterIdentity)(const char *service, const char *feature, SvcIdentity *identity,
-                                PolicyTrans **policy, uint32 *policyNum);
 typedef int (*RegisterEndpoint)(const IpcContext *context, SvcIdentity *identity);
 struct Endpoint {
     const char *name;
@@ -62,7 +61,6 @@ struct Endpoint {
     TokenBucket bucket;
 };
 
-int SAMGR_RegisterRegisterIdentity(RegisterIdentity action);
 Endpoint *SAMGR_CreateEndpoint(const char *name, RegisterEndpoint registry);
 int SAMGR_AddRouter(Endpoint *endpoint, const SaName *saName, const Identity *id, IUnknown *proxy);
 int SAMGR_ProcPolicy(const Endpoint *endpoint, const SaName *saName, int token);

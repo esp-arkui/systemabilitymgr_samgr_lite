@@ -31,16 +31,12 @@
 
 #define RETRY_INTERVAL 2
 #define MAX_RETRY_TIMES 10
-#define MAX_POLICY_NUM 8
+#define ABILITY_UID_START 100
 static void InitializeRegistry(void);
-static SvcIdentity QueryRemoteIdentity(const char *service, const char *feature);
-static int RegisterRemoteIdentity(const char *service, const char *feature, SvcIdentity *saInfo,
-                                  PolicyTrans **policy, uint32 *policyNum);
-static void GetRemotePolicy(IpcIo *reply, PolicyTrans **policy, uint32 *policyNum);
 static RemoteRegister g_remoteRegister;
+static BOOL g_isAbilityInited = FALSE;
 
-int __attribute__((weak)) SAMGR_RegisterServiceApi(const char *service, const char *feature,
-                                                   const Identity *identity, IUnknown *iUnknown)
+int SAMGR_RegisterServiceApi(const char *service, const char *feature, const Identity *identity, IUnknown *iUnknown)
 {
     if (service == NULL) {
         return EC_INVALID;
@@ -56,8 +52,11 @@ int __attribute__((weak)) SAMGR_RegisterServiceApi(const char *service, const ch
     return SAMGR_ProcPolicy(g_remoteRegister.endpoint, &saName, token);
 }
 
-IUnknown *__attribute__((weak)) SAMGR_FindServiceApi(const char *service, const char *feature)
+IUnknown *SAMGR_FindServiceApi(const char *service, const char *feature)
 {
+    if (service == NULL) {
+        return NULL;
+    }
     InitializeRegistry();
     SaName key = {service, feature};
     // the proxy already exits.
@@ -65,142 +64,76 @@ IUnknown *__attribute__((weak)) SAMGR_FindServiceApi(const char *service, const 
     if (index != INVALID_INDEX) {
         return VECTOR_At(&g_remoteRegister.clients, index);
     }
-
-    SvcIdentity identity = QueryRemoteIdentity(service, feature);
-    if (identity.handle == INVALID_INDEX) {
+    IUnknown *proxy = SAMGR_CreateIProxy(g_remoteRegister.endpoint->context, service, feature);
+    if (proxy == NULL) {
         return NULL;
     }
     MUTEX_Lock(g_remoteRegister.mtx);
     index = VECTOR_FindByKey(&g_remoteRegister.clients, &key);
     if (index != INVALID_INDEX) {
         MUTEX_Unlock(g_remoteRegister.mtx);
+        proxy->Release(proxy);
         return VECTOR_At(&g_remoteRegister.clients, index);
     }
-    IUnknown *proxy = SAMGR_CreateIProxy(g_remoteRegister.endpoint->context, service, feature, identity);
     VECTOR_Add(&g_remoteRegister.clients, proxy);
     MUTEX_Unlock(g_remoteRegister.mtx);
-    HILOG_INFO(HILOG_MODULE_SAMGR, "Create remote sa proxy[%p]<%s, %s> id<%u,%u>!",
-               proxy, service, feature, identity.handle, identity.token);
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Create remote sa proxy[%p]<%s, %s>!",
+               proxy, service, feature);
     return proxy;
 }
 
-static SvcIdentity QueryRemoteIdentity(const char *service, const char *feature)
+int32 SAMGR_RegisterSystemCapabilityApi(const char *sysCap, BOOL isReg)
 {
-    IpcIo req;
-    uint8 data[MIN_DATA_LEN];
-    IpcIoInit(&req, data, MIN_DATA_LEN, 0);
-    IpcIoPushUint32(&req, RES_FEATURE);
-    IpcIoPushUint32(&req, OP_GET);
-    IpcIoPushString(&req, service);
-    IpcIoPushBool(&req, feature == NULL);
-    if (feature != NULL) {
-        IpcIoPushString(&req, feature);
-    }
-    IpcIo reply;
-    void *replyBuf = NULL;
-    SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
-    int ret = Transact(g_remoteRegister.endpoint->context, samgr, INVALID_INDEX, &req, &reply,
-                       LITEIPC_FLAG_DEFAULT, (uintptr_t *)&replyBuf);
-    ret = (ret != LITEIPC_OK) ? EC_FAILURE : IpcIoPopInt32(&reply);
-    SvcIdentity target = {INVALID_INDEX, INVALID_INDEX, INVALID_INDEX};
-    if (ret == EC_SUCCESS) {
-        SvcIdentity *svc = IpcIoPopSvc(&reply);
-        if (svc != NULL) {
-            target = *svc;
-        }
-    }
-    if (ret == EC_PERMISSION) {
-        HILOG_INFO(HILOG_MODULE_SAMGR, "Cannot Access<%s, %s> No Permission!", service, feature);
-    }
-    if (replyBuf != NULL) {
-        FreeBuffer(g_remoteRegister.endpoint->context, replyBuf);
-    }
-    return target;
+    InitializeRegistry();
+    return SAMGR_AddSysCap(g_remoteRegister.endpoint, sysCap, isReg);
 }
 
-static int RegisterRemoteIdentity(const char *service, const char *feature, SvcIdentity *saInfo,
-                                  PolicyTrans **policy, uint32 *policyNum)
+BOOL SAMGR_QuerySystemCapabilityApi(const char *sysCap)
 {
-    IpcIo req;
-    uint8 data[MIN_DATA_LEN];
-    IpcIoInit(&req, data, MIN_DATA_LEN, 0);
-    IpcIoPushUint32(&req, RES_FEATURE);
-    IpcIoPushUint32(&req, OP_PUT);
-    IpcIoPushString(&req, service);
-    IpcIoPushBool(&req, feature == NULL);
-    if (feature != NULL) {
-        IpcIoPushString(&req, feature);
+    InitializeRegistry();
+    BOOL isReg = FALSE;
+    if (SAMGR_GetSysCap(g_remoteRegister.endpoint, sysCap, &isReg) != EC_SUCCESS) {
+        return FALSE;
     }
-    IpcIoPushUint32(&req, saInfo->token);
-    IpcIo reply;
-    void *replyBuf = NULL;
-    SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
-    int ret = Transact(g_remoteRegister.endpoint->context, samgr, INVALID_INDEX, &req, &reply,
-                       LITEIPC_FLAG_DEFAULT, (uintptr_t *)&replyBuf);
-    ret = -ret;
-    if (ret == LITEIPC_OK) {
-        ret = IpcIoPopInt32(&reply);
-    }
-    if (ret == EC_SUCCESS) {
-        saInfo = IpcIoPopSvc(&reply);
-        GetRemotePolicy(&reply, policy, policyNum);
-    }
-    if (replyBuf != NULL) {
-        FreeBuffer(g_remoteRegister.endpoint->context, replyBuf);
-    }
-    return ret;
+    return isReg;
 }
 
-static void GetRemotePolicy(IpcIo *reply, PolicyTrans **policy, uint32 *policyNum)
+int32 SAMGR_GetSystemCapabilitiesApi(char sysCaps[MAX_SYSCAP_NUM][MAX_SYSCAP_NAME_LEN], int32 *size)
 {
-    if (reply == NULL) {
+    InitializeRegistry();
+    return SAMGR_GetSystemCapabilities(g_remoteRegister.endpoint, sysCaps, size);
+}
+
+static void ClearRegistry(void)
+{
+    if (g_remoteRegister.endpoint == NULL) {
         return;
     }
-    uint32 i;
-    uint32 j;
-    *policyNum = IpcIoPopUint32(reply);
-    if (*policyNum > MAX_POLICY_NUM) {
-        *policyNum = MAX_POLICY_NUM;
-    }
-    SAMGR_Free(*policy);
-    if (*policyNum == 0) {
-        *policy = NULL;
-        return;
-    }
-    *policy = (PolicyTrans *)SAMGR_Malloc(sizeof(PolicyTrans) * (*policyNum));
-    if (*policy == NULL) {
-        return;
-    }
-    for (i = 0; i < *policyNum; i++) {
-        (*policy)[i].type = IpcIoPopInt32(reply);
-        switch ((*policy)[i].type) {
-            case RANGE:
-                (*policy)[i].uidMin = IpcIoPopInt32(reply);
-                (*policy)[i].uidMax = IpcIoPopInt32(reply);
-                break;
-            case FIXED:
-                for (j = 0; j < UID_SIZE; j++) {
-                    (*policy)[i].fixedUid[j] = IpcIoPopInt32(reply);
-                }
-                break;
-            case BUNDLENAME:
-                (*policy)[i].fixedUid[0] = IpcIoPopInt32(reply);
-                break;
-            default:
-                break;
-        }
-    }
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Clear Client Registry!");
+    SAMGR_Free(g_remoteRegister.mtx);
+    g_remoteRegister.mtx = NULL;
+    VECTOR_Clear(&(g_remoteRegister.clients));
+    VECTOR_Clear(&(g_remoteRegister.endpoint->routers));
+    CloseLiteIpc(g_remoteRegister.endpoint->context);
+    SAMGR_Free(g_remoteRegister.endpoint);
+    g_remoteRegister.endpoint = NULL;
 }
 
 static void InitializeRegistry(void)
 {
+    if (getuid() >= ABILITY_UID_START && !g_isAbilityInited) {
+        ClearRegistry();
+        g_isAbilityInited = TRUE;
+    }
     if (g_remoteRegister.endpoint != NULL) {
         return;
     }
-    HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize Registry!");
-    SAMGR_RegisterQueryIdentity(QueryRemoteIdentity);
-    SAMGR_RegisterRegisterIdentity(RegisterRemoteIdentity);
-    g_remoteRegister.mtx = MUTEX_InitValue();
-    g_remoteRegister.clients = VECTOR_Make((VECTOR_Key)SAMGR_GetSAName, (VECTOR_Compare)SAMGR_CompareSAName);
-    g_remoteRegister.endpoint = SAMGR_CreateEndpoint("ipc client", NULL);
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize Client Registry!");
+    MUTEX_GlobalLock();
+    if (g_remoteRegister.endpoint == NULL) {
+        g_remoteRegister.mtx = MUTEX_InitValue();
+        g_remoteRegister.clients = VECTOR_Make((VECTOR_Key)SAMGR_GetSAName, (VECTOR_Compare)SAMGR_CompareSAName);
+        g_remoteRegister.endpoint = SAMGR_CreateEndpoint("ipc client", NULL);
+    }
+    MUTEX_GlobalUnlock();
 }

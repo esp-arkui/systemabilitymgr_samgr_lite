@@ -14,7 +14,6 @@
  */
 #include "service_registry.h"
 #include <ohos_errno.h>
-#include <registry.h>
 
 int __attribute__((weak)) SAMGR_RegisterServiceApi(const char *service, const char *feature,
                                                    const Identity *identity, IUnknown *iUnknown)
@@ -33,12 +32,23 @@ IUnknown *__attribute__((weak)) SAMGR_FindServiceApi(const char *service, const 
     return NULL;
 }
 
-int __attribute__((weak)) SAMGR_RegisterFactory(const char *service, const char *feature,
-                                                Creator creator, Destroyer destroyer)
+int32 __attribute__((weak)) SAMGR_RegisterSystemCapabilityApi(const char *sysCap, BOOL isReg)
 {
-    (void)service;
-    (void)feature;
-    (void)creator;
-    (void)destroyer;
-    return EC_INVALID;
+    (void)sysCap;
+    (void)isReg;
+    return EC_FAILURE;
+}
+
+BOOL __attribute__((weak)) SAMGR_QuerySystemCapabilityApi(const char *sysCap)
+{
+    (void)sysCap;
+    return FALSE;
+}
+
+int32 __attribute__((weak)) SAMGR_GetSystemCapabilitiesApi(char sysCaps[MAX_SYSCAP_NUM][MAX_SYSCAP_NAME_LEN],
+                                                           int32 *size)
+{
+    (void)sysCaps;
+    (void)size;
+    return EC_FAILURE;
 }

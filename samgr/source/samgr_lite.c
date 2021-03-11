@@ -42,7 +42,9 @@ static BOOL RegisterDefaultFeatureApi(const char *serviceName, IUnknown *publicA
 static IUnknown *UnregisterDefaultFeatureApi(const char *serviceName);
 static IUnknown *GetDefaultFeatureApi(const char *serviceName);
 static IUnknown *GetFeatureApi(const char *serviceName, const char *feature);
-
+static int32 AddSystemCapability(const char *sysCap);
+static BOOL HasSystemCapability(const char *sysCap);
+static int32 GetSystemAvailableCapabilities(char sysCaps[MAX_SYSCAP_NUM][MAX_SYSCAP_NAME_LEN], int32 *size);
 /* **************************************************************************************************
  * Samgr Lite location functions
  * ************************************************************************************************* */
@@ -91,6 +93,9 @@ static void Init(void)
     g_samgrImpl.vtbl.UnregisterDefaultFeatureApi = UnregisterDefaultFeatureApi;
     g_samgrImpl.vtbl.GetDefaultFeatureApi = GetDefaultFeatureApi;
     g_samgrImpl.vtbl.GetFeatureApi = GetFeatureApi;
+    g_samgrImpl.vtbl.AddSystemCapability = AddSystemCapability;
+    g_samgrImpl.vtbl.HasSystemCapability = HasSystemCapability;
+    g_samgrImpl.vtbl.GetSystemAvailableCapabilities = GetSystemAvailableCapabilities;
     g_samgrImpl.status = BOOT_SYS;
     g_samgrImpl.services = VECTOR_Make((VECTOR_Key)GetServiceName, (VECTOR_Compare)strcmp);
     g_samgrImpl.mutex = MUTEX_InitValue();
@@ -350,6 +355,30 @@ static IUnknown *UnregisterDefaultFeatureApi(const char *serviceName)
 static IUnknown *GetDefaultFeatureApi(const char *serviceName)
 {
     return GetFeatureApi(serviceName, NULL);
+}
+
+static int32 AddSystemCapability(const char *sysCap)
+{
+    if (sysCap == NULL || strlen(sysCap) == 0 || strlen(sysCap) > MAX_SYSCAP_NAME_LEN) {
+        return EC_INVALID;
+    }
+    return SAMGR_RegisterSystemCapabilityApi(sysCap, TRUE);
+}
+
+static BOOL HasSystemCapability(const char *sysCap)
+{
+    if (sysCap == NULL || strlen(sysCap) == 0 || strlen(sysCap) > MAX_SYSCAP_NAME_LEN) {
+        return FALSE;
+    }
+    return SAMGR_QuerySystemCapabilityApi(sysCap);
+}
+
+static int32 GetSystemAvailableCapabilities(char sysCaps[MAX_SYSCAP_NUM][MAX_SYSCAP_NAME_LEN], int32 *sysCapNum)
+{
+    if (sysCaps == NULL || sysCapNum == NULL) {
+        return EC_INVALID;
+    }
+    return SAMGR_GetSystemCapabilitiesApi(sysCaps, sysCapNum);
 }
 
 static IUnknown *GetFeatureApi(const char *serviceName, const char *feature)
