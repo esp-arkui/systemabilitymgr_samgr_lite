@@ -27,7 +27,7 @@
 
 #define DONT_WAIT 0
 #define WAIT_FOREVER (-1)
-static int32 SharedSend(MQueueId queueId, Exchange *exchange);
+static int32 SharedSend(MQueueId queueId, Exchange *exchange, int initRef);
 static BOOL FreeReference(Exchange *exchange);
 
 int32 SAMGR_SendRequest(const Identity *identity, const Request *request, Handler handler)
@@ -54,7 +54,7 @@ int32 SAMGR_SendResponse(const Request *request, const Response *response)
     }
 
     Exchange *exchange = GET_OBJECT(request, Exchange, request);
-    if (exchange->type == MSG_NON) {
+    if (exchange->type != MSG_CON) {
         return EC_INVALID;
     }
 
@@ -76,7 +76,7 @@ int32 SAMGR_SendResponse(const Request *request, const Response *response)
     }
 
     // Send back to the origin to process the task.
-    int32 ret = SharedSend(exchange->id.queueId, exchange);
+    int32 ret = SharedSend(exchange->id.queueId, exchange, 1);
     if (ret != EC_SUCCESS) {
         exchange->handler(&exchange->request, &exchange->response);
         (void)FreeReference(exchange);
@@ -123,7 +123,7 @@ uint32 *SAMGR_SendSharedRequest(const Identity *identity, const Request *request
     Exchange exchange = {*identity, *request, {NULL, 0}, MSG_NON, handler, token};
     exchange.type = (handler == NULL) ? MSG_NON : MSG_CON;
     exchange.id.queueId = NULL;
-    int32 err = SharedSend(identity->queueId, &exchange);
+    int32 err = SharedSend(identity->queueId, &exchange, 0);
     if (err != EC_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_SAMGR, "SharedSend [%p] failed(%d)!", identity->queueId, err);
         (void)FreeReference(&exchange);
@@ -152,7 +152,7 @@ int32 SAMGR_SendSharedDirectRequest(const Identity *id, const Request *req, cons
     exchange.type = MSG_DIRECT;
     exchange.id = *id;
     exchange.id.queueId = NULL;
-    int32 err = SharedSend(id->queueId, &exchange);
+    int32 err = SharedSend(id->queueId, &exchange, 0);
     if (err != EC_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_SAMGR, "SharedSend [%p] failed(%d)!", id->queueId, err);
         (void)FreeReference(&exchange);
@@ -177,7 +177,7 @@ int32 SAMGR_SendResponseByIdentity(const Identity *id, const Request *request, c
     return SAMGR_SendResponse(request, response);
 }
 
-static int32 SharedSend(MQueueId queueId, Exchange *exchange)
+static int32 SharedSend(MQueueId queueId, Exchange *exchange, int initRef)
 {
     /* if the msg data and response is NULL, we just direct copy, no need shared the message. */
     if ((exchange->request.data == NULL || exchange->request.len <= 0) &&
@@ -188,12 +188,12 @@ static int32 SharedSend(MQueueId queueId, Exchange *exchange)
     /* 1.add reference */
     MUTEX_GlobalLock();
     if (exchange->sharedRef == NULL) {
-        exchange->sharedRef = (uint32 *)SAMGR_Malloc(sizeof(uint32));
+        exchange->sharedRef = (uint32*)SAMGR_Malloc(sizeof(uint32));
         if (exchange->sharedRef == NULL) {
             MUTEX_GlobalUnlock();
             return EC_NOMEMORY;
         }
-        *(exchange->sharedRef) = 0;
+        *(exchange->sharedRef) = initRef;
     }
     (*(exchange->sharedRef))++;
     MUTEX_GlobalUnlock();
