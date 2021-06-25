@@ -627,7 +627,7 @@
 
 ## 涉及仓<a name="section10365113863719"></a>
 
-**[分布式任务调度子系统](zh-cn_topic_0000001115719369.md)**
+分布式任务调度子系统
 
-[samgr\_lite](https://gitee.com/openharmony/distributedschedule_services_samgr_lite)
+**samgr\_lite**
 
