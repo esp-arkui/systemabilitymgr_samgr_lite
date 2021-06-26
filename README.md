@@ -627,7 +627,7 @@ Main objects of the SA framework:
 
 ## Repositories Involved<a name="section10365113863719"></a>
 
-[Distributed Scheduler subsystem](en-us_topic_0000001115719369.md)
+Distributed Scheduler subsystem
 
-**[samgr\_lite](https://gitee.com/openharmony/distributedschedule_services_samgr_lite)**
+**samgr\_lite**
 
