@@ -194,10 +194,11 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
         return EC_INVALID;
     }
     pid_t pid = GetCallingPid(origin);
+    uid_t uid = GetCallingUid(origin);
     char *feature = IpcIoPopBool(req) ? NULL : (char *)IpcIoPopString(req, &len);
     MUTEX_Lock(server->mtx);
     PidHandle handle;
-    int index = SASTORA_FindHandleByPid(&server->store, pid, &handle);
+    int index = SASTORA_FindHandleByUidPid(&server->store, uid, pid, &handle);
     if (index == INVALID_INDEX) {
         MUTEX_Unlock(server->mtx);
         HILOG_ERROR(HILOG_MODULE_SAMGR, "Endpoint[%d] is not register", pid);
