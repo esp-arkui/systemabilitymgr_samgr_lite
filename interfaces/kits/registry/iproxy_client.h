@@ -52,7 +52,7 @@ extern "C" {
 #endif
 #endif
 
-#define CLIENT_PROXY_VER 0x40
+#define CLIENT_PROXY_VER (0x40 | (uint16)DEFAULT_VERSION)
 
 /**
  * @brief Indicates the inherited macro of the client proxy.
