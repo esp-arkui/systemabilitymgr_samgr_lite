@@ -75,6 +75,7 @@ static inline void SASTORA_Init(SAStore *saStore)
 int SASTORA_Save(SAStore *saStore, const char *service, const char *feature, const SvcIdentity *identity);
 int SASTORA_SaveHandleByPid(SAStore *saStore, PidHandle handle);
 int SASTORA_FindHandleByPid(SAStore *saStore, pid_t callingPid, PidHandle *handle);
+int SASTORA_FindHandleByUidPid(SAStore *saStore, uid_t callingUid, pid_t callingPid, PidHandle *handle);
 SvcIdentity SASTORA_Find(SAStore *saStore, const char *service, const char *feature);
 int SASTORA_ClearByPid(SAStore *saStore, pid_t pid);
 PidHandle SASTORA_FindPidHandleByIpcHandle(const SAStore *saStore, uint32 handle);
