@@ -162,6 +162,29 @@ int SASTORA_FindHandleByPid(SAStore *saStore, pid_t callingPid, PidHandle *handl
     return INVALID_INDEX;
 }
 
+int SASTORA_FindHandleByUidPid(SAStore *saStore, uid_t callingUid, pid_t callingPid, PidHandle *handle)
+{
+    if (saStore == NULL || saStore->maps == NULL || handle == NULL) {
+        return INVALID_INDEX;
+    }
+    int16 high = saStore->mapTop - 1;
+    int16 low = 0;
+    while (low <= high) {
+        // binary search need div 2
+        int16 mid = (high + low) / 2;
+        if (saStore->maps[mid].pid == callingPid && saStore->maps[mid].uid == callingUid) {
+            *handle = saStore->maps[mid];
+            return mid;
+        }
+        if (saStore->maps[mid].pid < callingPid) {
+            low = mid + 1;
+            continue;
+        }
+        high = mid - 1;
+    }
+    return INVALID_INDEX;
+}
+
 PidHandle SASTORA_FindPidHandleByIpcHandle(const SAStore *saStore, uint32 handle)
 {
     PidHandle pidHandle = {INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX};
