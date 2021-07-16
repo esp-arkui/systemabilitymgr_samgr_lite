@@ -24,15 +24,13 @@ source_set("client") {
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
     "//utils/native/lite/include",
-    "//kernel/liteos_a/kernel/include",
-    "//kernel/liteos_a/kernel/common",
     "//third_party/bounds_checking_function/include",
-    "//base/security/permission/services/permission_lite/include",
+    "//base/security/permission/services/permission_lite/include"
   ]
 
   public_deps = [
     "//foundation/communication/ipc_lite:liteipc_adapter",
     "//foundation/distributedschedule/samgr_lite/samgr_endpoint:endpoint_source",
-    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/bounds_checking_function:libsec_shared"
   ]
 }
