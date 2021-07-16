@@ -24,8 +24,6 @@ shared_library("server") {
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/registry",
     "//utils/native/lite/include",
-    "//kernel/liteos_a/kernel/include/",
-    "//kernel/liteos_a/kernel/common",
     "//third_party/bounds_checking_function/include",
     "//base/security/permission/interfaces/innerkits/permission_lite",
     "//base/security/permission/services/permission_lite/pms_base/include",
