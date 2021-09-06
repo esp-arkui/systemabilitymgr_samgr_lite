@@ -36,7 +36,7 @@
 #endif
 #define MAX_OBJECT_NUM 5
 #define MAX_RETRY_TIMES 3
-#define RETRY_INTERVAL 5
+#define RETRY_INTERVAL (50 * 1000)
 #define MAX_REGISTER_RETRY_TIMES 10
 #define REGISTER_RETRY_INTERVAL 2
 #define MAX_POLICY_NUM 8
@@ -372,7 +372,7 @@ static void *Receive(void *argv)
             break;
         }
         ++retry;
-        sleep(RETRY_INTERVAL);
+        usleep(RETRY_INTERVAL);
     }
 
     if (ret != EC_SUCCESS) {
@@ -571,7 +571,7 @@ static int RegisterRemoteEndpoint(const IpcContext *context, SvcIdentity *identi
             }
             return EC_SUCCESS;
         }
-        sleep(RETRY_INTERVAL);
+        usleep(RETRY_INTERVAL);
     }
     return EC_FAILURE;
 }
@@ -602,7 +602,7 @@ static int OnSamgrServerExit(const IpcContext *context, void *ipcMsg, IpcIo *dat
     SvcIdentity old = endpoint->identity;
     while (endpoint->registerEP(endpoint->context, &endpoint->identity) != EC_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_SAMGR, "Reconnect to samgr server failed!");
-        sleep(RETRY_INTERVAL);
+        usleep(RETRY_INTERVAL);
     }
     SvcIdentity new = endpoint->identity;
     if (old.handle != new.handle || old.cookie != new.cookie || old.token != new.token) {
