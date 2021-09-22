@@ -443,6 +443,8 @@ static void AddTaskPool(ServiceImpl *service, TaskConfig *cfg, const char *name)
             if (samgr->sharedPool[pos] == NULL) {
                 TaskConfig shareCfg = DEFAULT_TASK_CFG(pos);
                 samgr->sharedPool[pos] = SAMGR_CreateFixedTaskPool(&shareCfg, name, DEFAULT_SIZE);
+                service->taskPool = samgr->sharedPool[pos];
+                break; 
             }
             service->taskPool = samgr->sharedPool[pos];
             if (SAMGR_ReferenceTaskPool(service->taskPool) == NULL) {
