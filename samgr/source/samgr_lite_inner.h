@@ -31,7 +31,6 @@ extern "C" {
 #define SINGLE_SIZE 1
 #define MAX_POOL_NUM 8
 #define PROPERTY_STEP 8
-#define DEFAULT_TASK_CFG(pos) {LEVEL_HIGH,  (int16) ((pos) * PROPERTY_STEP + 1), 0x800, 25, SHARED_TASK}
 #define WDG_SAMGR_INIT_TIME 1000
 #define WDG_SVC_REG_TIME 5000
 #define WDG_SVC_BOOT_TIME 5000

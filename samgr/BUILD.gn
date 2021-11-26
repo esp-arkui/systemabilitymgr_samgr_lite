@@ -10,8 +10,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import("../config.gni")
+
+defines = []
+
+if (defined(config_ohos_distributedschedule_samgr_lite_shared_task_size) &&
+    config_ohos_distributedschedule_samgr_lite_shared_task_size > 0) {
+  defines += [ "SHARED_TASK_STACK_SIZE=$config_ohos_distributedschedule_samgr_lite_shared_task_size" ]
+}
+
 config("external_settings_shared") {
-  defines = [ "LAYER_INIT_SHARED_LIB" ]
+  defines += [ "LAYER_INIT_SHARED_LIB" ]
 }
 
 config("samgr_public") {
