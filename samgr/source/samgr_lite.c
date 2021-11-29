@@ -441,7 +441,8 @@ static void AddTaskPool(ServiceImpl *service, TaskConfig *cfg, const char *name)
             int pos = (int)cfg->priority / PROPERTY_STEP;
             SamgrLiteImpl *samgr = GetImplement();
             if (samgr->sharedPool[pos] == NULL) {
-                TaskConfig shareCfg = DEFAULT_TASK_CFG(pos);
+                TaskConfig shareCfg = {LEVEL_HIGH, (int16) ((pos) * PROPERTY_STEP + 1),
+                                       SHARED_TASK_STACK_SIZE, 25, SHARED_TASK};
                 samgr->sharedPool[pos] = SAMGR_CreateFixedTaskPool(&shareCfg, name, DEFAULT_SIZE);
             }
             service->taskPool = samgr->sharedPool[pos];
