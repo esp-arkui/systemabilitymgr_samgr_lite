@@ -29,6 +29,8 @@ shared_library("server") {
     "//base/security/permission/services/permission_lite/pms_base/include",
   ]
 
+  deps = [ "//foundation/distributedschedule/samgr_lite:ConfigFiles" ]
+
   public_deps = [
     "//foundation/communication/ipc_lite:liteipc_adapter",
     "//foundation/distributedschedule/samgr_lite/samgr:samgr",
