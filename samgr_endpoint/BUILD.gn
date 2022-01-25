@@ -45,6 +45,8 @@ source_set("endpoint_source") {
       "_GNU_SOURCE",
       "LITE_LINUX_BINDER_IPC",
     ]
+  } else {
+    defines = [ "_GNU_SOURCE" ]
   }
 
   configs += [ ":endpoint_internal" ]
