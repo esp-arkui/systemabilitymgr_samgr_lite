@@ -79,7 +79,7 @@ static int Dispatch(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption opti
 static void HandleIpc(const Request *request, const Response *response);
 static int OnSamgrServerExit(void *ipcMsg, IpcIo *data, void *argv);
 static int RegisterRemoteFeatures(Endpoint *endpoint);
-static void Listen(Endpoint *endpoint, int token, const char *service, const char *feature);
+static void Listen(Endpoint *endpoint, int index, const char *service, const char *feature);
 static boolean JudgePolicy(uid_t callingUid, const PolicyTrans *policy, uint32 policyNum);
 static boolean SearchFixedPolicy(uid_t callingUid, PolicyTrans policy);
 static int AddPolicyToRouter(const Endpoint *endpoint, const SvcIdentity *saInfo,
