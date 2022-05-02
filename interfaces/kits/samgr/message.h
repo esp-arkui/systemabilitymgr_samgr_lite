@@ -34,7 +34,7 @@
  * @brief Provides message communication APIs that help you to implement asynchronous functions
  * of {@link IUnknown}.
  *
- * This API is used to implement asynchronous functions of {@link IUnknown}. \n
+ * This file is used to implement asynchronous functions of {@link IUnknown}. \n
  *
  * @since 1.0
  * @version 1.0
@@ -65,7 +65,7 @@ typedef struct Response Response;
  */
 typedef void (*Handler)(const Request *request, const Response *response);
 
-// Will be used for message interaction, so use one-byte alignment
+// Use one-byte alignment becasue this API will be used for message interaction.
 #pragma pack(1)
 /**
  * @brief Identifies a service and feature.
