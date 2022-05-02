@@ -89,7 +89,7 @@ static const char *GetSysCapName(const SysCapImpl *serviceImpl)
 
 static void InitializeRegistry(void)
 {
-    HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize Registry!");
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize registry.");
     g_server.mtx = MUTEX_InitValue();
     SASTORA_Init(&g_server.store);
     g_server.samgr = SAMGR_CreateEndpoint("samgr", RegisterSamgrEndpoint);
@@ -140,7 +140,7 @@ static BOOL MessageHandle(Service *service, Request *request)
 static TaskConfig GetTaskConfig(Service *service)
 {
     (void)service;
-    TaskConfig config = {LEVEL_HIGH, PRI_BUTT - 1, 0x400, 20, SINGLE_TASK}; // Cannot use PRI_BUTT directly, so minus 1
+    TaskConfig config = {LEVEL_HIGH, PRI_BUTT - 1, 0x400, 20, SINGLE_TASK}; // PRI_BUTT cannot be used directly, so 1 is deducted
     return config;
 }
 
@@ -211,7 +211,7 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
     int index = SASTORA_FindHandleByUidPid(&server->store, uid, pid, &handle);
     if (index == INVALID_INDEX) {
         MUTEX_Unlock(server->mtx);
-        HILOG_ERROR(HILOG_MODULE_SAMGR, "Endpoint[%d] is not register", pid);
+        HILOG_ERROR(HILOG_MODULE_SAMGR, "Endpoint[%d] is not registered", pid);
         IpcIoPushInt32(reply, EC_NOSERVICE);
         return EC_NOSERVICE;
     }
@@ -231,7 +231,7 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
     if (ret != EC_SUCCESS || policy == NULL) {
         MUTEX_Unlock(server->mtx);
         SAMGR_Free(policy);
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Remote Get Communication Strategy<%s, %s> No Permission<%d>!",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Remote get communication strategy<%s, %s> no permission<%d>!",
                     service, feature, ret);
         IpcIoPushInt32(reply, EC_PERMISSION);
         return EC_PERMISSION;
@@ -239,7 +239,7 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
 
     ret = SASTORA_Save(&server->store, service, feature, identity);
     MUTEX_Unlock(server->mtx);
-    HILOG_DEBUG(HILOG_MODULE_SAMGR, "Register Feature<%s, %s> pid<%d>, id<%u, %u> ret:%d",
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "Register feature<%s, %s> pid<%d>, id<%u, %u> ret:%d",
                 service, feature, pid, identity->handle, identity->token, ret);
     TransmitPolicy(ret, identity, reply, policy, policyNum);
     SAMGR_Free(policy);
@@ -304,7 +304,7 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
     *identity = SASTORA_Find(&server->store, service, feature);
     if (identity->handle == INVALID_INDEX) {
         MUTEX_Unlock(server->mtx);
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Cannot Find Feature<%s, %s> id<%u, %u> ret:%d",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Cannot find feature<%s, %s> id<%u, %u> ret:%d",
                     service, feature, identity->handle, identity->token, EC_NOSERVICE);
         return EC_NOSERVICE;
     }
@@ -312,7 +312,7 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
     PidHandle providerPid = SASTORA_FindPidHandleByIpcHandle(&server->store, identity->handle);
     MUTEX_Unlock(server->mtx);
     if (providerPid.pid == INVALID_INDEX || providerPid.uid == INVALID_INDEX) {
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Cannot Find PidHandle<%s, %s> id<%d, %d> ret:%d",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Cannot find PidHandle<%s, %s> id<%d, %d> ret:%d",
                     service, feature, identity->handle, identity->token, EC_FAILURE);
         return EC_FAILURE;
     }
@@ -328,7 +328,7 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
     HILOG_DEBUG(HILOG_MODULE_SAMGR, "Judge Auth<%s, %s> ret:%d", service, feature, isAuth);
 
     int32 ret = (isAuth == EC_SUCCESS) ? AddServiceAccess(*identity, GetCallingTid(origin)) : EC_PERMISSION;
-    HILOG_DEBUG(HILOG_MODULE_SAMGR, "Find Feature<%s, %s> id<%d, %d> ret:%d",
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "Find feature<%s, %s> id<%d, %d> ret:%d",
                 service, feature, identity->handle, identity->token, ret);
     return ret;
 }
@@ -453,9 +453,9 @@ void ProcGetAllSysCap(SamgrServer *server, IpcIo *req, IpcIo *reply)
     HILOG_DEBUG(HILOG_MODULE_SAMGR, "ProcGetAllSysCap replyNum: %d, size: %d, startIdx: %u, nextRequestIdx: %d",
                 replyNum, size, startIdx, nextRequestIdx);
     IpcIoPushInt32(reply, EC_SUCCESS);
-    // indicate is the last reply
+    // indication of the last reply
     IpcIoPushBool(reply, nextRequestIdx == size);
-    // indicate is the next start idx
+    // indication of the next start idx
     IpcIoPushUint32(reply, nextRequestIdx);
     IpcIoPushUint32(reply, replyNum);
     int32 cnt = 0;
@@ -505,8 +505,8 @@ static int RegisterSamgrEndpoint(const IpcContext* context, SvcIdentity* identit
 {
     int ret = SetSaManager(context, MAX_SA_SIZE);
     if (ret != LITEIPC_OK) {
-        HILOG_FATAL(HILOG_MODULE_SAMGR, "Set sa manager<%d> failed!", ret);
-        // Set sa manager failed! We need restart to recover
+        HILOG_FATAL(HILOG_MODULE_SAMGR, "Setting sa manager<%d> failed!", ret);
+        // Setting sa manager failed. We need restart to recover.
         exit(-ret);
     }
     identity->handle = SAMGR_HANDLE;
@@ -542,7 +542,7 @@ static int OnEndpointExit(const IpcContext *context, void* ipcMsg, IpcIo* data, 
         BinderRelease(context, handle.handle);
     }
 #endif
-    HILOG_ERROR(HILOG_MODULE_SAMGR, "IPC pid<%d> exit! send clean request retry(%d), ret(%d)!", pid, retry, ret);
+    HILOG_ERROR(HILOG_MODULE_SAMGR, "IPC pid<%d> exit! Send clean request retry(%d), ret(%d)!", pid, retry, ret);
     return EC_SUCCESS;
 }
 
@@ -608,7 +608,7 @@ static void ParseSysCap(void)
     int32_t sysCapNum = 0;
     for (int32_t i = 0; i < size; i++) {
         if (sysCapNum >= MAX_SYSCAP_NUM) {
-            HILOG_ERROR(HILOG_MODULE_SAMGR, "ParseSycCapMap system capability exceed");
+            HILOG_ERROR(HILOG_MODULE_SAMGR, "ParseSycCapMap system capability exceeded");
             break;
         }
         cJSON *item = cJSON_GetArrayItem(sysCaps, i);
@@ -622,7 +622,7 @@ static void ParseSysCap(void)
         }
         char *nameStr = cJSON_GetStringValue(name);
         if (VECTOR_FindByKey(&(g_server.sysCapabilitys), nameStr) != INVALID_INDEX) {
-            HILOG_WARN(HILOG_MODULE_SAMGR, "Duplicate system capability %s register!", nameStr);
+            HILOG_WARN(HILOG_MODULE_SAMGR, "Duplicate system capability %s registered!", nameStr);
             continue;
         }
         SysCapImpl *impl = (SysCapImpl *)SAMGR_Malloc(sizeof(SysCapImpl));
@@ -636,7 +636,7 @@ static void ParseSysCap(void)
         impl->isRegister = cJSON_IsTrue(isRegister);
         if (VECTOR_Add(&(g_server.sysCapabilitys), impl) == INVALID_INDEX) {
             SAMGR_Free(impl);
-            HILOG_ERROR(HILOG_MODULE_SAMGR, "system capability %s register failed!", impl->name);
+            HILOG_ERROR(HILOG_MODULE_SAMGR, "Registering system capability %s failed!", impl->name);
             continue;
         }
         sysCapNum++;
