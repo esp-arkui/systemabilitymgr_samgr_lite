@@ -116,7 +116,7 @@ typedef struct IUnknown IUnknown;
         DEFAULT_IUNKNOWN_IMPL
 
 /**
- * @brief IUnknown Defines the end macro for initializing the <b>IUnknown</b> implementation
+ * @brief Defines the end macro for initializing the <b>IUnknown</b> implementation
  * object.
  *
  * This macro is used when a subclass object of the <b>IUnknown</b> implementation class is
@@ -149,11 +149,11 @@ typedef struct IUnknown IUnknown;
  */
 struct IUnknown {
     /**
-     * Queries the subclass object of the <b>IUnknown</b> interface of a specified version
+     * Query the subclass object of the <b>IUnknown</b> interface of a specified version
      * (downcasting).
      */
     int (*QueryInterface)(IUnknown *iUnknown, int version, void **target);
-    /** Adds the reference count. */
+    /** Add the reference count. */
     int (*AddRef)(IUnknown *iUnknown);
     /** Release the reference to an <b>IUnknown</b> interface. */
     int (*Release)(IUnknown *iUnknown);
@@ -213,7 +213,7 @@ int IUNKNOWN_AddRef(IUnknown *iUnknown);
  * @param version Indicates the version of the <b>IUnknown</b> interface object to be converted.
  * @param target Indicates the <b>IUnknown</b> subclass type required by the caller. This is an
  * output parameter.
- * @return Returns <b>EC_SUCCESS</b> if the conversion is successful; returns other error codes
+ * @return Returns <b>EC_SUCCESS</b> if the conversion is successful; returns an error code
  * if the conversion fails.
  *
  * @since 1.0
