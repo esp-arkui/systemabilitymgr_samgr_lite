@@ -629,5 +629,5 @@
 
 分布式任务调度子系统
 
-**samgr\_lite**
+**distributedschedule_samgr_lite**
 
