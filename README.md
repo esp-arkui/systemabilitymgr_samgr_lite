@@ -629,5 +629,5 @@ Main objects of the SA framework:
 
 Distributed Scheduler subsystem
 
-**samgr\_lite**
+**distributedschedule_samgr_lite**
 
