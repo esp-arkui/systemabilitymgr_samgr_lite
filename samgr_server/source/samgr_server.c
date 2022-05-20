@@ -140,7 +140,7 @@ static BOOL MessageHandle(Service *service, Request *request)
 static TaskConfig GetTaskConfig(Service *service)
 {
     (void)service;
-    TaskConfig config = {LEVEL_HIGH, PRI_BUTT - 1, 0x400, 20, SINGLE_TASK}; // PRI_BUTT cannot be used directly, so 1 is deducted
+    TaskConfig config = {LEVEL_HIGH, PRI_BUTT - 1, 0x400, 20, SINGLE_TASK}; // Minus 1 as PRI_BUTT cannot be used directly 
     return config;
 }
 
