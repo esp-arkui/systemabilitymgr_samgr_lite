@@ -140,7 +140,8 @@ static BOOL MessageHandle(Service *service, Request *request)
 static TaskConfig GetTaskConfig(Service *service)
 {
     (void)service;
-    TaskConfig config = {LEVEL_HIGH, PRI_BUTT - 1, 0x400, 20, SINGLE_TASK}; // Minus 1 as PRI_BUTT cannot be used directly 
+    TaskConfig config = {LEVEL_HIGH, PRI_BUTT - 1, 0x400, 20, SINGLE_TASK};
+    // PRI_BUTT cannot be used directly, so 1 is minus
     return config;
 }
 
@@ -453,9 +454,9 @@ void ProcGetAllSysCap(SamgrServer *server, IpcIo *req, IpcIo *reply)
     HILOG_DEBUG(HILOG_MODULE_SAMGR, "ProcGetAllSysCap replyNum: %d, size: %d, startIdx: %u, nextRequestIdx: %d",
                 replyNum, size, startIdx, nextRequestIdx);
     IpcIoPushInt32(reply, EC_SUCCESS);
-    // indication of the last reply
+    // Indication of the last reply
     IpcIoPushBool(reply, nextRequestIdx == size);
-    // indication of the next start idx
+    // Indication of the next start idx
     IpcIoPushUint32(reply, nextRequestIdx);
     IpcIoPushUint32(reply, replyNum);
     int32 cnt = 0;
@@ -506,7 +507,7 @@ static int RegisterSamgrEndpoint(const IpcContext* context, SvcIdentity* identit
     int ret = SetSaManager(context, MAX_SA_SIZE);
     if (ret != LITEIPC_OK) {
         HILOG_FATAL(HILOG_MODULE_SAMGR, "Setting sa manager<%d> failed!", ret);
-        // Setting sa manager failed. We need restart to recover.
+        // Setting SA manager failed. A restart is needed to recover.
         exit(-ret);
     }
     identity->handle = SAMGR_HANDLE;
