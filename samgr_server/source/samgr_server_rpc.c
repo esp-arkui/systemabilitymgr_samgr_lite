@@ -221,7 +221,8 @@ static BOOL MessageHandle(Service *service, Request *request)
 static TaskConfig GetTaskConfig(Service *service)
 {
     (void)service;
-    TaskConfig config = {LEVEL_HIGH, PRI_BUTT - 1, 0x4000, 20, SINGLE_TASK}; // Minus 1 as PRI_BUTT cannot be used directly
+    TaskConfig config = {LEVEL_HIGH, PRI_BUTT - 1, 0x4000, 20, SINGLE_TASK}; 
+    // PRI_BUTT cannot be used directly, so 1 is minus
     return config;
 }
 
@@ -546,9 +547,9 @@ void ProcGetAllSysCap(SamgrServer *server, IpcIo *req, IpcIo *reply)
     HILOG_DEBUG(HILOG_MODULE_SAMGR, "ProcGetAllSysCap replyNum: %d, size: %d, startIdx: %u, nextRequestIdx: %d",
                 replyNum, size, startIdx, nextRequestIdx);
     WriteInt32(reply, EC_SUCCESS);
-    // indication of the last reply
+    // Indication of the last reply
     WriteBool(reply, nextRequestIdx == size);
-    // indication of the next start idx
+    // Indication of the next start idx
     WriteUint32(reply, nextRequestIdx);
     WriteUint32(reply, replyNum);
     int32 cnt = 0;
