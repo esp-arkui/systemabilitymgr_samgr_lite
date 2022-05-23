@@ -33,7 +33,7 @@
  *
  * @brief Manages system capabilities.
  *
- * This file is used for Samgr to register and discover services, features, and functions. \n
+ * This file is used for the Samgr client to register and discover services, features, and functions. \n
  *
  * @since 1.0
  * @version 1.0
