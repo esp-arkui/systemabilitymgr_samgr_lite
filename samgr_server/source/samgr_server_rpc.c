@@ -261,7 +261,7 @@ static int ProcEndpoint(SamgrServer *server, int32 option, void *origin, IpcIo *
 #ifdef __LINUX__
         IpcMsg* data = (IpcMsg*)origin;
         if (data == NULL) {
-            HILOG_ERROR(HILOG_MODULE_SAMGR, "Register Endpoint origin null pointer!");
+            HILOG_ERROR(HILOG_MODULE_SAMGR, "Registered endpoint origin null pointer!");
             return EC_FAILURE;
         }
         identity.handle = data->target.handle;
@@ -277,7 +277,7 @@ static int ProcEndpoint(SamgrServer *server, int32 option, void *origin, IpcIo *
     }
     MUTEX_Unlock(server->mtx);
     WriteUint32(reply, handle.handle);
-    HILOG_INFO(HILOG_MODULE_SAMGR, "Register Endpoint<%d, %d, %d>", handle.pid, handle.handle, handle.deadId);
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Endpoint<%d registered, %d, %d>", handle.pid, handle.handle, handle.deadId);
     return EC_SUCCESS;
 }
 
@@ -323,7 +323,7 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
     if (ret != EC_SUCCESS || policy == NULL) {
         MUTEX_Unlock(server->mtx);
         SAMGR_Free(policy);
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Remote get communication strategy<%s, %s> no permission<%d>!",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Failed to get communication strategy<%s, %s> no permission<%d>!",
                     service, feature, ret);
         WriteInt32(reply, EC_PERMISSION);
         return EC_PERMISSION;
@@ -331,7 +331,7 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
 
     ret = SASTORA_Save(&server->store, service, feature, identity);
     MUTEX_Unlock(server->mtx);
-    HILOG_DEBUG(HILOG_MODULE_SAMGR, "Register feature<%s, %s> pid<%d>, id<%d, %d> ret:%d",
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "Feature<%s registered, %s> pid<%d>, id<%d, %d> ret:%d",
                 service, feature, pid, identity->handle, identity->token, ret);
     TransmitPolicy(ret, identity, reply, policy, policyNum);
     SAMGR_Free(policy);
@@ -401,7 +401,7 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
     *identity = SASTORA_Find(&server->store, service, feature);
     if (identity->handle == INVALID_INDEX) {
         MUTEX_Unlock(server->mtx);
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Cannot find feature<%s, %s> id<%d, %d> ret:%d",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Feature<%s not found, %s> id<%d, %d> ret:%d",
                     service, feature, identity->handle, identity->token, EC_NOSERVICE);
         return EC_NOSERVICE;
     }
@@ -409,7 +409,7 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
     PidHandle providerPid = SASTORA_FindPidHandleByIpcHandle(&server->store, identity->handle);
     MUTEX_Unlock(server->mtx);
     if (providerPid.pid == INVALID_INDEX || providerPid.uid == INVALID_INDEX) {
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Cannot find PidHandle<%s, %s> id<%d, %d> ret:%d",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "PidHandle<%s not found, %s> id<%d, %d> ret:%d",
                     service, feature, identity->handle, identity->token, EC_FAILURE);
         return EC_FAILURE;
     }
