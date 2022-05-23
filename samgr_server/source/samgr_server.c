@@ -232,7 +232,7 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
     if (ret != EC_SUCCESS || policy == NULL) {
         MUTEX_Unlock(server->mtx);
         SAMGR_Free(policy);
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Remote get communication strategy<%s, %s> no permission<%d>!",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Failed to get communication strategy<%s, %s> no permission<%d>!",
                     service, feature, ret);
         IpcIoPushInt32(reply, EC_PERMISSION);
         return EC_PERMISSION;
