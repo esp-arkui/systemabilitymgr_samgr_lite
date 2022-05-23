@@ -258,10 +258,15 @@ static int ProcEndpoint(SamgrServer *server, int32 option, void *origin, IpcIo *
     int index = SASTORA_FindHandleByPid(&g_server.store, pid, &handle);
     if (index == INVALID_INDEX) {
         SvcIdentity identity = {(int32)INVALID_INDEX, (uint32)INVALID_INDEX, (uint32)INVALID_INDEX};
-#ifdef __LINUX__
-        IpcMsg* data = (IpcMsg*)origin;
-        if (data == NULL) {
-            HILOG_ERROR(HILOG_MODULE_SAMGR, "Registered endpoint origin null pointer!");
+#ifndef MINI_SAMGR_LITE_RPC
+        bool ret = ReadRemoteObject(req, &identity);
+        if (ret) {
+            // identity.handle <= 0: In-process communication; identity.handle > 0: Cross-process communication
+            if ((identity.handle <= 0) && (identity.cookie != 0)) {
+                identity.handle = 0;
+            }
+        } else {
+            WriteInt32(reply, INVALID_INDEX);
             return EC_FAILURE;
         }
         identity.handle = data->target.handle;
