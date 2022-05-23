@@ -89,15 +89,14 @@ static const char *GetSysCapName(const SysCapImpl *serviceImpl)
 
 static void InitializeRegistry(void)
 {
-    HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize registry.");
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Registry initialized.");
     g_server.mtx = MUTEX_InitValue();
     SASTORA_Init(&g_server.store);
-    g_server.samgr = SAMGR_CreateEndpoint("samgr", RegisterSamgrEndpoint);
     SAMGR_GetInstance()->RegisterService((Service *)&g_server);
     g_server.sysCapMtx = MUTEX_InitValue();
     g_server.sysCapabilitys = VECTOR_Make((VECTOR_Key)GetSysCapName, (VECTOR_Compare)strcmp);
     ParseSysCap();
-    HILOG_INFO(HILOG_MODULE_SAMGR, "InitializeRegistry ParseSysCap size: %d", VECTOR_Size(&(g_server.sysCapabilitys)));
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Registry initialized, ParseSysCap size: %d", VECTOR_Size(&(g_server.sysCapabilitys)));
 }
 SYS_SERVICE_INIT(InitializeRegistry);
 
