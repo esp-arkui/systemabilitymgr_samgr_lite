@@ -305,7 +305,7 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
     *identity = SASTORA_Find(&server->store, service, feature);
     if (identity->handle == INVALID_INDEX) {
         MUTEX_Unlock(server->mtx);
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Cannot find feature<%s, %s> id<%u, %u> ret:%d",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Feature<%s not found, %s> id<%u, %u> ret:%d",
                     service, feature, identity->handle, identity->token, EC_NOSERVICE);
         return EC_NOSERVICE;
     }
@@ -313,7 +313,7 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
     PidHandle providerPid = SASTORA_FindPidHandleByIpcHandle(&server->store, identity->handle);
     MUTEX_Unlock(server->mtx);
     if (providerPid.pid == INVALID_INDEX || providerPid.uid == INVALID_INDEX) {
-        HILOG_DEBUG(HILOG_MODULE_SAMGR, "Cannot find PidHandle<%s, %s> id<%d, %d> ret:%d",
+        HILOG_DEBUG(HILOG_MODULE_SAMGR, "PidHandle<%s not found, %s> id<%d, %d> ret:%d",
                     service, feature, identity->handle, identity->token, EC_FAILURE);
         return EC_FAILURE;
     }
@@ -329,7 +329,7 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
     HILOG_DEBUG(HILOG_MODULE_SAMGR, "Judge Auth<%s, %s> ret:%d", service, feature, isAuth);
 
     int32 ret = (isAuth == EC_SUCCESS) ? AddServiceAccess(*identity, GetCallingTid(origin)) : EC_PERMISSION;
-    HILOG_DEBUG(HILOG_MODULE_SAMGR, "Find feature<%s, %s> id<%d, %d> ret:%d",
+    HILOG_DEBUG(HILOG_MODULE_SAMGR, "Feature<%s found, %s> id<%d, %d> ret:%d",
                 service, feature, identity->handle, identity->token, ret);
     return ret;
 }
