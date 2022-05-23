@@ -65,7 +65,6 @@ typedef struct Response Response;
  */
 typedef void (*Handler)(const Request *request, const Response *response);
 
-// Use one-byte alignment becasue this API will be used for message interaction.
 #pragma pack(1)
 /**
  * @brief Identifies a service and feature.
