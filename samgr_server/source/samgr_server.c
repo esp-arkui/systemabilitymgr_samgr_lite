@@ -453,9 +453,9 @@ void ProcGetAllSysCap(SamgrServer *server, IpcIo *req, IpcIo *reply)
     HILOG_DEBUG(HILOG_MODULE_SAMGR, "ProcGetAllSysCap replyNum: %d, size: %d, startIdx: %u, nextRequestIdx: %d",
                 replyNum, size, startIdx, nextRequestIdx);
     IpcIoPushInt32(reply, EC_SUCCESS);
-    // indicate is the last reply
+    // indication of the last reply
     IpcIoPushBool(reply, nextRequestIdx == size);
-    // indicate is the next start idx
+    // indication of the next start idx
     IpcIoPushUint32(reply, nextRequestIdx);
     IpcIoPushUint32(reply, replyNum);
     int32 cnt = 0;
