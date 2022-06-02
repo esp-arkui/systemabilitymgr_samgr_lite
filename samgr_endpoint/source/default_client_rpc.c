@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "default_client_adapter.h"
+#include <stdlib.h>
 
 static int AddRef(IUnknown *iUnknown);
 static int Release(IUnknown *proxy);
@@ -224,7 +225,7 @@ static SvcIdentity QueryIdentity(const char *service, const char *feature)
     }
     IpcIo reply;
     void *replyBuf = NULL;
-    SvcIdentity *samgr = GetContextObject();
+    const SvcIdentity *samgr = GetContextObject();
     MessageOption flag;
     MessageOptionInit(&flag);
     int ret = SendRequest(*samgr, INVALID_INDEX, &req, &reply, flag, (uintptr_t *)&replyBuf);
