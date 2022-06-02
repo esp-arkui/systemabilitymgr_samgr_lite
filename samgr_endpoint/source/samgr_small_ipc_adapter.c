@@ -49,7 +49,7 @@ int ClientRegisterRemoteEndpoint(SvcIdentity *identity, int token, const char *s
         void *replyBuf = NULL;
         MessageOption option;
         MessageOptionInit(&option);
-        SvcIdentity *samgr = GetContextObject();
+        const SvcIdentity *samgr = GetContextObject();
 
         int err = SendRequest(*samgr, INVALID_INDEX, &req, &reply, option, (uintptr_t *)&replyBuf);
         if (err == EC_SUCCESS) {
@@ -73,7 +73,7 @@ void Listen(Endpoint *endpoint, int token, const char *service, const char *feat
         return;
     }
     ThreadAttr attr = {endpoint->name, MAX_STACK_SIZE, PRI_ABOVE_NORMAL, 0, 0};
-    IRegisterEpArg *registerEpArg = SAMGR_Malloc(sizeof(IRegisterEpArg));
+    const IRegisterEpArg *registerEpArg = SAMGR_Malloc(sizeof(IRegisterEpArg));
     if (registerEpArg == NULL) {
         HILOG_ERROR(HILOG_MODULE_SAMGR, "IRegisterEpArg Memory is not enough!");
         return;
@@ -111,7 +111,7 @@ static void *Receive(void *argv)
         ret = registerEpArg->endpoint->registerEP(&registerEpArg->endpoint->identity,
             registerEpArg->token, registerEpArg->service, registerEpArg->feature);
         if (ret == EC_SUCCESS) {
-            SvcIdentity *samgr = GetContextObject();
+            const SvcIdentity *samgr = GetContextObject();
             (void)RemoveDeathRecipient(*samgr, registerEpArg->endpoint->deadId);
             (void)AddDeathRecipient(*samgr, OnSamgrServerExit, registerEpArg->endpoint,
                 &registerEpArg->endpoint->deadId);
@@ -177,7 +177,7 @@ int RegisterIdentity(const SaName *saName, SvcIdentity *saInfo, PolicyTrans **po
     WriteUint32(&req, saInfo->token);
     IpcIo reply;
     void *replyBuf = NULL;
-    SvcIdentity *samgr = GetContextObject();
+    const SvcIdentity *samgr = GetContextObject();
     MessageOption option;
     MessageOptionInit(&option);
     int ret = SendRequest(*samgr, INVALID_INDEX, &req, &reply, option,
