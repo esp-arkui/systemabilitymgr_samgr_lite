@@ -115,7 +115,7 @@ int32 SAMGR_AddSysCap(const Endpoint *endpoint, const char *sysCap, BOOL isReg)
 
     IpcIo reply;
     void *replyBuf = NULL;
-    SvcIdentity *samgr = GetContextObject();
+    const SvcIdentity *samgr = GetContextObject();
     MessageOption option;
     MessageOptionInit(&option);
     int ret = SendRequest(*samgr, INVALID_INDEX, &req, &reply,
@@ -150,7 +150,7 @@ int32 SAMGR_GetSysCap(const Endpoint *endpoint, const char *sysCap, BOOL *isReg)
 
     IpcIo reply;
     void *replyBuf = NULL;
-    SvcIdentity *samgr = GetContextObject();
+    const SvcIdentity *samgr = GetContextObject();
     MessageOption option;
     MessageOptionInit(&option);
     int ret = SendRequest(*samgr, INVALID_INDEX, &req, &reply,
@@ -180,7 +180,7 @@ static int SendGetAllSysCapsRequest(const Endpoint *endpoint, uint32 startIdx, I
     WriteUint32(&req, RES_SYSCAP);
     WriteUint32(&req, OP_ALL);
     WriteUint32(&req, startIdx);
-    SvcIdentity *samgr = GetContextObject();
+    const SvcIdentity *samgr = GetContextObject();
     MessageOption option;
     MessageOptionInit(&option);
     int ret = SendRequest(*samgr, INVALID_INDEX, &req, reply,
@@ -273,7 +273,7 @@ int SAMGR_ProcPolicy(const Endpoint *endpoint, const SaName *saName, int token)
             continue;
         }
         HILOG_INFO(HILOG_MODULE_SAMGR, "Register server sa<%s, %s> id<%lu, %u> retry:%d ret:%d!",
-                   saName->service, saName->feature, saInfo.handle, saInfo.token, retry, ret);
+                   saName->service, saName->feature, (unsigned long)saInfo.handle, saInfo.token, retry, ret);
         ret = AddPolicyToRouter(endpoint, &saInfo, policy, policyNum);
         SAMGR_Free(policy);
         if (ret == EC_SUCCESS) {
