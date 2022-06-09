@@ -57,26 +57,11 @@ IUnknown *SAMGR_FindServiceApi(const char *service, const char *feature)
     if (service == NULL) {
         return NULL;
     }
+    HILOG_INFO(HILOG_MODULE_SAMGR, "SAMGR_FindServiceApi enter, <%s>", service);
     InitializeRegistry();
     SaName key = {service, feature};
-    // the proxy already exits.
-    int index = VECTOR_FindByKey(&g_remoteRegister.clients, &key);
-    if (index != INVALID_INDEX) {
-        return VECTOR_At(&g_remoteRegister.clients, index);
-    }
+
     IUnknown *proxy = SAMGR_CreateIProxy(g_remoteRegister.endpoint->context, service, feature);
-    if (proxy == NULL) {
-        return NULL;
-    }
-    MUTEX_Lock(g_remoteRegister.mtx);
-    index = VECTOR_FindByKey(&g_remoteRegister.clients, &key);
-    if (index != INVALID_INDEX) {
-        MUTEX_Unlock(g_remoteRegister.mtx);
-        proxy->Release(proxy);
-        return VECTOR_At(&g_remoteRegister.clients, index);
-    }
-    VECTOR_Add(&g_remoteRegister.clients, proxy);
-    MUTEX_Unlock(g_remoteRegister.mtx);
     HILOG_INFO(HILOG_MODULE_SAMGR, "Create remote sa proxy<%s, %s>!", service, feature);
     return proxy;
 }
@@ -128,6 +113,7 @@ static void InitializeRegistry(void)
         return;
     }
     HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize Client Registry!");
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize Client chenkang!");
     MUTEX_GlobalLock();
     if (g_remoteRegister.endpoint == NULL) {
         g_remoteRegister.mtx = MUTEX_InitValue();
