@@ -33,7 +33,7 @@
  *
  * @brief Manages system capabilities.
  *
- * This is used when services, features, and functions are registered with and discovered by Samgr. \n
+ * This file is used for the Samgr client to register and discover services, features, and functions. \n
  *
  * @since 1.0
  * @version 1.0
@@ -72,7 +72,7 @@ extern "C" {
 /**
  * @brief Enumerates the IDs of the message to be processed for starting the bootstrap service.
  *
- * This function is implemented by developers of the system service. \n
+ * This function is implemented by system service developers. \n
  * Messages sent to the bootstrap service when Samgr is started. \n
  *
  */

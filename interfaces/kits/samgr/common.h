@@ -56,11 +56,11 @@ typedef void *MutexId;
 typedef void *ThreadId;
 
 /**
- * @brief Calculates the offset of the member in the T type.
+ * @brief Calculates the offset for the member of the T type.
  *
  *
  *
- * @param Indicates the T type.
+ * @param T Indicates the T type.
  * @param member Indicates the name of the T member variable.
  *
  * @since 1.0
@@ -141,7 +141,7 @@ typedef struct SimpleVector {
 Vector VECTOR_Make(VECTOR_Key key, VECTOR_Compare compare);
 
 /**
- * @brief Destruct a vector object.
+ * @brief Destructs a vector object.
  *
  * This function is used to clear the memory applied by the vector after the temporary vector in
  * the stack is used. \n
