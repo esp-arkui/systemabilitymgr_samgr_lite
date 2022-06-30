@@ -104,29 +104,47 @@ SaName *SAMGR_GetSAName(const IUnknown *proxy)
 
 int SAMGR_CompareSAName(const SaName *key1, const SaName *key2)
 {
+    HILOG_INFO(HILOG_MODULE_SAMGR, "key1 : %p, key2 : %p, key1->service : %p, key2->service : %p, key1->featrue : %p, key2->feature : %p",
+        key1, key2, key1->service, key2->service, key1->feature, key2->feature);
     if (key1 == key2) {
+        HILOG_INFO(HILOG_MODULE_SAMGR, "key1 == key2, return");
         return 0;
     }
 
     if (key1->service != key2->service) {
         int ret = strcmp(key1->service, key2->service);
         if (ret != 0) {
+            HILOG_INFO(HILOG_MODULE_SAMGR, "key1->service != key2->service, return");
             return ret;
         }
     }
 
     if (key1->feature == key2->feature) {
-        return 0;
+        if (key1->feature == NULL && key2->feature == NULL) {
+            HILOG_INFO(HILOG_MODULE_SAMGR, "key1->feature == NULL && key2->feature == NULL, return");
+            return 0;
+        }
+        if (key1->feature != NULL &&  key2->feature != NULL) {
+            int ret = strcmp(key1->service, key2->service);
+            if (ret == 0) {
+                HILOG_INFO(HILOG_MODULE_SAMGR, " strcmp(key1->service, key2->service) == 0");
+                return strcmp(key1->feature, key2->feature);
+            }
+            HILOG_INFO(HILOG_MODULE_SAMGR, " strcmp(key1->service, key2->service) != 0");
+            return ret;
+        }
     }
 
     if (key1->feature == NULL) {
+        HILOG_INFO(HILOG_MODULE_SAMGR, "key1->feature == NULL");
         return -1;
     }
 
     if (key2->feature == NULL) {
+        HILOG_INFO(HILOG_MODULE_SAMGR, "key2->feature == NULL");
         return 1;
     }
-
+    HILOG_INFO(HILOG_MODULE_SAMGR, "strcmp(key1->feature, key2->feature) finally, return");
     return strcmp(key1->feature, key2->feature);
 }
 
