@@ -90,6 +90,7 @@ IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, con
     (void)memset_s(featureName, SA_MAX_LEN, 0, featureLen);
     (void)strncpy_s(serviceName, SA_MAX_LEN, service, serviceLen);
     (void)strncpy_s(featureName, SA_MAX_LEN, feature, featureLen);
+    HILOG_INFO(HILOG_MODULE_SAMGR, "serviceName : %s, %p; featureName : %s, %p", serviceName, serviceName, featureName, featureName);
     IClientHeader *header = &client->header;
     header->target = identity;
     header->key.service = serviceName;
