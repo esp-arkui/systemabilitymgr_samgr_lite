@@ -82,7 +82,7 @@ if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
     ]
 
     public_deps = [
-      "//build/lite/config/component/cJSON:cjson_shared",
+      "//build/hb/config/component/cJSON:cjson_shared",
       "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
       "//foundation/distributedschedule/samgr_lite/samgr/source:samgr_source",
       "//foundation/distributedschedule/samgr_lite/samgr_client:client",
