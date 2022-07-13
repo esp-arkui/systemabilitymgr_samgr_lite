@@ -14,6 +14,7 @@
  */
 #include "default_client_adapter.h"
 
+#define SA_MAX_LEN 17
 static int AddRef(IUnknown *iUnknown);
 static int Release(IUnknown *proxy);
 static int ProxyInvoke(IClientProxy *proxy, int funcId, IpcIo *request, IOwner owner, INotify notify);
@@ -39,10 +40,29 @@ IUnknown *SAMGR_CreateIProxy(const char *service, const char *feature)
         client->entry = DEFAULT_ENTRY;
     }
 
+    char *serviceName = (char *)malloc(SA_MAX_LEN);
+    if (serviceName == NULL) {
+        HILOG_INFO(HILOG_MODULE_SAMGR, "malloc null");
+        return NULL;
+    }
+    char *featureName = (char *)malloc(SA_MAX_LEN);
+    if (featureName == NULL) {
+        free(serviceName);
+        HILOG_INFO(HILOG_MODULE_SAMGR, "featurename malloc null");
+        return NULL;
+    }
+    size_t serviceLen = strlen(service);
+    size_t featureLen = strlen(feature);
+    (void)memset_s(serviceName, SA_MAX_LEN, 0, SA_MAX_LEN);
+    (void)memset_s(featureName, SA_MAX_LEN, 0, SA_MAX_LEN);
+    (void)strncpy_s(serviceName, SA_MAX_LEN, service, serviceLen);
+    (void)strncpy_s(featureName, SA_MAX_LEN, feature, featureLen);
+    HILOG_INFO(HILOG_MODULE_SAMGR, "serviceName : %s, %p; featureName : %s, %p", serviceName, serviceName, featureName, featureName);
+
     IClientHeader *header = &client->header;
     header->target = identity;
-    header->key.service = service;
-    header->key.feature = feature;
+    header->key.service = serviceName;
+    header->key.feature = featureName;
     header->saId = 0;
     (void)AddDeathRecipient(identity, OnServiceExit, client, &header->deadId);
 
@@ -55,6 +75,7 @@ IUnknown *SAMGR_CreateIProxy(const char *service, const char *feature)
 
 IUnknown *SAMGR_CreateIRemoteProxy(const char* deviceId, const char *service, const char *feature)
 {
+    HILOG_INFO(HILOG_MODULE_SAMGR, "SAMGR_CreateIProxy enter");
     SvcIdentity identity = QueryRemoteIdentity(deviceId, service, feature);
 
     IDefaultClient *client = SAMGR_CreateIClient(service, feature, sizeof(IClientHeader));
