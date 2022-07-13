@@ -59,6 +59,7 @@ static MutexId g_mutex = NULL;
 
 IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, const char *feature)
 {
+    HILOG_INFO(HILOG_MODULE_SAMGR, "SAMGR_CreateIProxy enter");
     SvcIdentity identity = QueryIdentity(context, service, feature);
     if (identity.handle == INVALID_INDEX) {
         return NULL;
@@ -73,7 +74,7 @@ IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, con
         client->entry = DEFAULT_ENTRY;
     }
 
-    char *serviceName = (char *)malloc(SA_MAXLEN);
+    char *serviceName = (char *)malloc(SA_MAX_LEN);
     if (serviceName == NULL) {
         HILOG_INFO(HILOG_MODULE_SAMGR, "malloc null");
         return NULL;
@@ -86,8 +87,8 @@ IUnknown *SAMGR_CreateIProxy(const IpcContext *context, const char *service, con
     }
     size_t serviceLen = strlen(service);
     size_t featureLen = strlen(feature);
-    (void)memset_s(serviceName, SA_MAX_LEN, 0, serviceLen);
-    (void)memset_s(featureName, SA_MAX_LEN, 0, featureLen);
+    (void)memset_s(serviceName, SA_MAX_LEN, 0, SA_MAX_LEN);
+    (void)memset_s(featureName, SA_MAX_LEN, 0, SA_MAX_LEN);
     (void)strncpy_s(serviceName, SA_MAX_LEN, service, serviceLen);
     (void)strncpy_s(featureName, SA_MAX_LEN, feature, featureLen);
     HILOG_INFO(HILOG_MODULE_SAMGR, "serviceName : %s, %p; featureName : %s, %p", serviceName, serviceName, featureName, featureName);
