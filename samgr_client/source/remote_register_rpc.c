@@ -43,7 +43,8 @@ static BOOL g_isAbilityInited = FALSE;
 
 int SAMGR_RegisterServiceApi(const char *service, const char *feature, const Identity *identity, IUnknown *iUnknown)
 {
-    if (service == NULL) {
+    if (service == NULL) {  
+    
         return EC_INVALID;
     }
     ClientInitializeRegistry();
