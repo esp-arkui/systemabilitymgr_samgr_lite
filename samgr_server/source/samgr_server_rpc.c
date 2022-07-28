@@ -115,8 +115,8 @@ SaNode *GetSaNodeBySaId(uintptr_t saId)
 {
     SaNode *node = NULL;
     SaNode *retNode = NULL;
-
     pthread_mutex_lock(&g_saMutex);
+    
     UTILS_DL_LIST_FOR_EACH_ENTRY(node, &g_saList, SaNode, list)
     {
         if (node->saId == saId) {
