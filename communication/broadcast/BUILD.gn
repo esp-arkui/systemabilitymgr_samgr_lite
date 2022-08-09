@@ -16,7 +16,7 @@ config("broadcast_public") {
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/communication/broadcast",
     "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
     "//foundation/distributedschedule/samgr_lite/samgr/adapter",
-    "//utils/native/lite/include",
+    "//commonlibrary/utils_lite/include",
   ]
 }
 
