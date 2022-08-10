@@ -16,7 +16,7 @@ config("broadcast_public") {
     "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/communication/broadcast",
     "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
     "//foundation/systemabilitymgr/samgr_lite/samgr/adapter",
-    "//utils/native/lite/include",
+    "//commonlibrary/utils_lite/include",
   ]
 }
 

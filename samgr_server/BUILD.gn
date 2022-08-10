@@ -27,7 +27,7 @@ if (!enable_ohos_systemabilitymgr_samgr_lite_rpc_mini) {
       "//base/security/permission_lite/interfaces/innerkits",
       "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
       "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/registry",
-      "//utils/native/lite/include",
+      "//commonlibrary/utils_lite/include",
       "//third_party/cJSON",
       "//third_party/bounds_checking_function/include",
       "//base/security/permission_lite/services/pms_base/include",
@@ -52,7 +52,7 @@ if (!enable_ohos_systemabilitymgr_samgr_lite_rpc_mini) {
         "../samgr_endpoint/source",
         "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
         "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/registry",
-        "//utils/native/lite/include",
+        "//commonlibrary/utils_lite/include",
         "//third_party/bounds_checking_function/include",
       ]
 
