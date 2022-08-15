@@ -145,7 +145,7 @@ static void ClientInitializeRegistry(void)
     if (g_remoteRegister.endpoint != NULL) {
         return;
     }
-    HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize Client Registry!");
+    HILOG_INFO(HILOG_MODULE_SAMGR, "Initialize Client Registry chenkang rpc!");
     MUTEX_GlobalLock();
     if (g_remoteRegister.endpoint == NULL) {
         g_remoteRegister.mtx = MUTEX_InitValue();
