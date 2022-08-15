@@ -30,6 +30,8 @@ if (!enable_ohos_systemabilitymgr_samgr_lite_rpc_mini) {
       "./source",
       "../samgr/registry",
     ]
+  } else {
+    defines = [ "_GNU_SOURCE" ]
   }
 
   source_set("endpoint_source") {
