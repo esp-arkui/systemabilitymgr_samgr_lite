@@ -18,4 +18,7 @@ declare_args() {
 
   # enable samgr_lite adapt to rpc on mini system.
   enable_ohos_systemabilitymgr_samgr_lite_rpc_mini = false
+
+  # enable samgr_lite customize implementation
+  enable_ohos_systemabilitymgr_samgr_lite_customize_implementation = false
 }

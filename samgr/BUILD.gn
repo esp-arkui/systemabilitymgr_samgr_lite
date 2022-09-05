@@ -29,13 +29,13 @@ config("samgr_public") {
     "adapter",
     "registry",
     "//commonlibrary/utils_lite/include",
-    "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/registry",
-    "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
+    "../interfaces/kits/registry",
+    "../interfaces/kits/samgr",
   ]
 }
 
 if (ohos_kernel_type == "liteos_m") {
-  static_library("samgr") {
+  static_library("samgr_static") {
     sources = [
       "registry/service_registry.c",
       "source/samgr_lite.c",
@@ -47,17 +47,24 @@ if (ohos_kernel_type == "liteos_m") {
         [ "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite" ]
 
     public_deps = [
-      "//foundation/systemabilitymgr/samgr_lite/samgr/adapter:samgr_adapter",
-      "//foundation/systemabilitymgr/samgr_lite/samgr/source:samgr_source",
+      "adapter:samgr_adapter",
+      "source:samgr_source",
     ]
 
     if (enable_ohos_systemabilitymgr_samgr_lite_rpc_mini) {
       defines += [ "MINI_SAMGR_LITE_RPC" ]
-      include_dirs +=
-          [ "//foundation/systemabilitymgr/samgr_lite/samgr_endpoint/source" ]
+      include_dirs += [ "../samgr_endpoint/source" ]
       public_deps += [
         "//foundation/communication/ipc/interfaces/innerkits/c/dbinder:dbinder",
       ]
+    }
+  }
+
+  group("samgr") {
+    if (enable_ohos_systemabilitymgr_samgr_lite_customize_implementation) {
+      public_configs = [ ":samgr_public" ]
+    } else {
+      public_deps = [ ":samgr_static" ]
     }
   }
 }
@@ -66,13 +73,7 @@ if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {
   shared_library("samgr") {
     sources = [ "source/samgr_lite.c" ]
 
-    cflags = [
-      "-fPIC",
-      "-Wall",
-    ]
-
     public_configs = [ ":samgr_public" ]
-
     include_dirs = [
       "//third_party/bounds_checking_function/include",
       "//third_party/cJSON",
