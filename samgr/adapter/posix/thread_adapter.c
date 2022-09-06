@@ -70,14 +70,13 @@ ThreadId THREAD_Create(Runnable run, void *argv, const ThreadAttr *attr)
     pthread_attr_t threadAttr;
     pthread_attr_init(&threadAttr);
     pthread_attr_setstacksize(&threadAttr, (attr->stackSize | MIN_STACK_SIZE));
-#ifdef SAMGR_LINUX_ADAPTER
-    struct sched_param sched = {attr->priority};
-#else
+
+#ifndef SAMGR_LINUX_ADAPTER
     struct sched_param sched = {PRI_BUTT - attr->priority};
-#endif
-    pthread_attr_setinheritsched(&threadAttr, PTHREAD_EXPLICIT_SCHED);
     pthread_attr_setschedpolicy(&threadAttr, SCHED_RR);
     pthread_attr_setschedparam(&threadAttr, &sched);
+#endif
+    pthread_attr_setinheritsched(&threadAttr, PTHREAD_EXPLICIT_SCHED);
     (void) pthread_once(&g_localKeyOnce, KeyCreate);
     pthread_t threadId = 0;
     int errno = pthread_create(&threadId, &threadAttr, run, argv);
