@@ -1,3 +1,4 @@
+for test
 # samgr\_lite<a name="EN-US_TOPIC_0000001081604584"></a>
 
 -   [Introduction](#section11660541593)
