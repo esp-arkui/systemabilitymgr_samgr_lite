@@ -146,6 +146,7 @@ static TaskConfig GetTaskConfig(Service *service)
 
 static int32 Invoke(IServerProxy *iProxy, int funcId, void *origin, IpcIo *req, IpcIo *reply)
 {
+    printf("HUAWEI_LOG: %s, %s, %d, pid:%d tid:%ld\r\n", __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     SamgrServer *server = GET_OBJECT(iProxy, SamgrServer, iUnknown);
     uint32_t resource = IpcIoPopUint32(req);
     uint32_t option = IpcIoPopUint32(req);
@@ -158,8 +159,10 @@ static int32 Invoke(IServerProxy *iProxy, int funcId, void *origin, IpcIo *req, 
 
 static int ProcEndpoint(SamgrServer *server, int32 option, void *origin, IpcIo *req, IpcIo *reply)
 {
+    printf("HUAWEI_LOG: %s step0, %s, %d, callingpid:%d tid:%ld\r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin),(long int)syscall(224));
     if (option != OP_POST) {
         IpcIoPushUint32(reply, (uint32)INVALID_INDEX);
+        printf("HUAWEI_LOG: %s step1 , %s, %d, callingpid:%d tid:%ld\r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin),(long int)syscall(224));
         return EC_FAILURE;
     }
 
@@ -171,6 +174,7 @@ static int ProcEndpoint(SamgrServer *server, int32 option, void *origin, IpcIo *
         SvcIdentity identity = {(uint32)INVALID_INDEX, (uint32)INVALID_INDEX, (uint32)INVALID_INDEX};
         (void)GenServiceHandle(&identity, GetCallingTid(origin));
 #ifdef __LINUX__
+        printf("HUAWEI_LOG: %s step2, %s, %d, callingpid:%d tid:%ld\r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin), (long int)syscall(224));
         IpcMsg* data = (IpcMsg*)origin;
         if (data == NULL) {
             HILOG_ERROR(HILOG_MODULE_SAMGR, "Register Endpoint origin null pointer!");
@@ -197,10 +201,12 @@ static int ProcEndpoint(SamgrServer *server, int32 option, void *origin, IpcIo *
 
 static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req, IpcIo *reply, SvcIdentity *identity)
 {
+    printf("HUAWEI_LOG: %s step0, %s, %d, callingpid:%d tid:%ld\r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin),(long int)syscall(224));
     size_t len = 0;
     char *service = (char *)IpcIoPopString(req, &len);
     if (service == NULL || len == 0) {
         IpcIoPushInt32(reply, EC_INVALID);
+        printf("HUAWEI_LOG: %s step1, %s, %d, callingpid:%d tid:%ld\r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin),(long int)syscall(224));
         return EC_INVALID;
     }
     pid_t pid = GetCallingPid(origin);
@@ -219,6 +225,7 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
     if (identity->handle != INVALID_INDEX && identity->handle != handle.handle) {
         MUTEX_Unlock(server->mtx);
         IpcIoPushInt32(reply, EC_INVALID);
+        printf("HUAWEI_LOG: %s step2, %s, %d, callingpid:%d tid:%ld\r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin),(long int)syscall(224));
         return EC_INVALID;
     }
     identity->token = IpcIoPopUint32(req);
@@ -228,6 +235,7 @@ static int32 ProcPutFeature(SamgrServer *server, const void *origin, IpcIo *req,
     RegParams regParams = {service, feature, handle.uid, handle.pid};
     uint32 policyNum = 0;
     int ret = g_server.ipcAuth->GetCommunicationStrategy(regParams, &policy, &policyNum);
+    printf("HUAWEI_LOG: %s step3, %s, %d, callingpid:%d \r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin));
     if (ret != EC_SUCCESS || policy == NULL) {
         MUTEX_Unlock(server->mtx);
         SAMGR_Free(policy);
@@ -335,8 +343,10 @@ static int32 ProcGetFeature(SamgrServer *server, const void *origin, IpcIo *req,
 
 static int ProcFeature(SamgrServer *server, int32 option, void *origin, IpcIo *req, IpcIo *reply)
 {
+    printf("HUAWEI_LOG: %s step0, %s, %d, callingpid:%d \r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin));
     if (option != OP_PUT && option != OP_GET) {
         IpcIoPushInt32(reply, EC_INVALID);
+        printf("HUAWEI_LOG: %s step1, %s, %d, callingpid:%d \r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin));
         return EC_INVALID;
     }
 
@@ -345,15 +355,18 @@ static int ProcFeature(SamgrServer *server, int32 option, void *origin, IpcIo *r
     }
     if (g_server.ipcAuth == NULL) {
         IpcIoPushInt32(reply, EC_NOINIT);
+        printf("HUAWEI_LOG: %s step2, %s, %d, callingpid:%d \r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin));
         return EC_NOINIT;
     }
 
     int ret = EC_SUCCESS;
     SvcIdentity identity = {INVALID_INDEX, INVALID_INDEX, INVALID_INDEX};
     if (option == OP_PUT) {
+        printf("HUAWEI_LOG: %s step3, %s, %d, callingpid:%d \r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin));
         ret = ProcPutFeature(server, origin, req, reply, &identity);
     }
     if (ret != EC_SUCCESS) {
+        printf("HUAWEI_LOG: %s step4, %s,%d, callingpid:%d \r\n", __func__, __FILE__, __LINE__, GetCallingPid(origin));
         return ret;
     }
 

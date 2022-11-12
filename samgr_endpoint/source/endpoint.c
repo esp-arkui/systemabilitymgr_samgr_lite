@@ -102,6 +102,7 @@ Endpoint *SAMGR_CreateEndpoint(const char *name, RegisterEndpoint registry)
 
 int SAMGR_AddRouter(Endpoint *endpoint, const SaName *saName, const Identity *id, IUnknown *proxy)
 {
+    printf("HUAWEI_LOG: %s, %s, %s, %s, %d, pid:%d tid:%ld\r\n", __func__, __FILE__, saName->service, saName->feature, __LINE__, getpid(),(long int)syscall(224));
     if (endpoint == NULL || id == NULL || proxy == NULL || saName == NULL) {
         return EC_INVALID;
     }
@@ -134,7 +135,9 @@ int SAMGR_AddRouter(Endpoint *endpoint, const SaName *saName, const Identity *id
         SAMGR_Free(router);
         return EC_FAILURE;
     }
+    printf("HUAWEI_LOG: %s, %s, %s, %s, %d, pid : %d tid :%ld\r\n", __func__, __FILE__, saName->service, saName->feature, __LINE__, getpid(),(long int)syscall(224));
     Listen(endpoint);
+    printf("HUAWEI_LOG: %s, %s, %s, %s, %d, pid : %d, tid:%ld\r\n", __func__, __FILE__, saName->service, saName->feature, __LINE__, getpid(),(long int)syscall(224));
     return index;
 }
 
@@ -311,6 +314,7 @@ static void Listen(Endpoint *endpoint)
     if (endpoint->boss != NULL) {
         return;
     }
+    printf("HUAWEI_LOG: Register endpoint<%s>, %s, %s, %d, pid : %d tid :%ld\r\n", endpoint->name, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     ThreadAttr attr = {endpoint->name, MAX_STACK_SIZE, PRI_ABOVE_NORMAL, 0, 0};
     endpoint->boss = (ThreadId)THREAD_Create(Receive, endpoint, &attr);
 }
@@ -357,17 +361,20 @@ static void *Receive(void *argv)
     if (endpoint == NULL || endpoint->registerEP == NULL) {
         return NULL;
     }
-
+    printf("HUAWEI_LOG: endpoint<%s>, %s, %s, %d, pid : %d,tid:%ld\r\n", endpoint->name, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     int ret = EC_INVALID;
     uint32 retry = 0;
     while (retry < MAX_RETRY_TIMES) {
+        printf("HUAWEI_LOG: endpoint<%s>, %s, %s, %d, pid:%d,tid:%ld\r\n", endpoint->name, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
         ret = endpoint->registerEP(endpoint->context, &endpoint->identity);
         if (ret == EC_SUCCESS) {
+            printf("HUAWEI_LOG: endpoint<%s>, %s, %s, %d,pid:%d,tid:%ld\r\n", endpoint->name, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
             SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
             (void)UnregisterDeathCallback(samgr, endpoint->deadId);
             (void)RegisterDeathCallback(endpoint->context, samgr, OnSamgrServerExit, endpoint, &endpoint->deadId);
             break;
         }
+        printf("HUAWEI_LOG: endpoint<%s>, %s, %s, %d,pid:%d,tid:%ld\r\n", endpoint->name, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
         ++retry;
         usleep(RETRY_INTERVAL);
     }
@@ -377,13 +384,15 @@ static void *Receive(void *argv)
                     endpoint->name, endpoint->identity.handle);
         exit(-ret);
     }
-
+    printf("HUAWEI_LOG: endpoint<%s>, %s, %s, %d,pid:%d,tid:%ld\r\n", endpoint->name, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     endpoint->running = TRUE;
     if (endpoint->identity.handle != SAMGR_HANDLE) {
+        printf("HUAWEI_LOG: endpoint<%s>, %s, %s, %d,pid:%d,tid:%ld\r\n", endpoint->name, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
         int remain = RegisterRemoteFeatures(endpoint);
         HILOG_INFO(HILOG_MODULE_SAMGR, "Register endpoint<%s> and iunknown finished! remain<%d> iunknown!",
                    endpoint->name, remain);
     }
+    printf("HUAWEI_LOG: endpoint<%s>, %s, %s, %d,pid:%d,tid:%ld\r\n", endpoint->name, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     StartLoop(endpoint->context, Dispatch, endpoint);
     return NULL;
 }
@@ -490,6 +499,7 @@ static IServerProxy *GetIServerProxy(const Router *router)
 static int RegisterIdentity(const IpcContext *context, const SaName *saName, SvcIdentity *saInfo,
                             PolicyTrans **policy, uint32 *policyNum)
 {
+    printf("HUAWEI_LOG: saName %s, %s, %s, %d,pid:%d,tid:%ld\r\n", saName->service, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     IpcIo req;
     uint8 data[MAX_DATA_LEN];
     IpcIoInit(&req, data, MAX_DATA_LEN, 0);
@@ -497,7 +507,9 @@ static int RegisterIdentity(const IpcContext *context, const SaName *saName, Svc
     IpcIoPushUint32(&req, OP_PUT);
     IpcIoPushString(&req, saName->service);
     IpcIoPushBool(&req, saName->feature == NULL);
+    printf("HUAWEI_LOG: saName %s, %s, %s, %d,pid:%d,tid:%ld\r\n", saName->service, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     if (saName->feature != NULL) {
+        printf("HUAWEI_LOG: saName %s, %s, %s, %d,pid:%d,tid:%ld\r\n", saName->service, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
         IpcIoPushString(&req, saName->feature);
     }
     IpcIoPushUint32(&req, saInfo->token);
@@ -505,15 +517,19 @@ static int RegisterIdentity(const IpcContext *context, const SaName *saName, Svc
     void *replyBuf = NULL;
     SvcIdentity samgr = {SAMGR_HANDLE, SAMGR_TOKEN, SAMGR_COOKIE};
     int ret = Transact(context, samgr, INVALID_INDEX, &req, &reply, LITEIPC_FLAG_DEFAULT, (uintptr_t *)&replyBuf);
+    printf("HUAWEI_LOG: saName %s, %s, %s, %d,pid:%d,tid:%ld\r\n", saName->service, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     ret = -ret;
     if (ret == LITEIPC_OK) {
+        printf("HUAWEI_LOG: saName %s, %s, %s, %d,pid:%d,tid:%ld\r\n", saName->service, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
         ret = IpcIoPopInt32(&reply);
     }
     if (ret == EC_SUCCESS) {
+        printf("HUAWEI_LOG: saName %s, %s, %s, %d,pid:%d,tid:%ld\r\n", saName->service, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
         IpcIoPopSvc(&reply);
         GetRemotePolicy(&reply, policy, policyNum);
     }
     if (replyBuf != NULL) {
+        printf("HUAWEI_LOG: saName %s, %s, %s, %d,pid:%d,tid:%ld\r\n", saName->service, __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
         FreeBuffer(context, replyBuf);
     }
     return ret;
@@ -527,6 +543,7 @@ static int RegisterRemoteFeatures(Endpoint *endpoint)
     SvcIdentity identity;
     for (i = 0; i < size; ++i) {
         Router *router = VECTOR_At(&endpoint->routers, i);
+        printf("RegisterRemoteFeature enter<%s,%s>, %s, %s, %d\r\n",router->saName.service, router->saName.feature, __func__, __FILE__, __LINE__);
         if (router == NULL) {
             continue;
         }
@@ -546,6 +563,7 @@ static int RegisterRemoteFeatures(Endpoint *endpoint)
 
 static int RegisterRemoteEndpoint(const IpcContext *context, SvcIdentity *identity)
 {
+    printf("HUAWEI_LOG: %s, %s, %d,pid:%d,tid:%ld\r\n", __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
     IpcIo req;
     uint8 data[MAX_DATA_LEN];
     IpcIoInit(&req, data, MAX_DATA_LEN, 0);
@@ -553,6 +571,7 @@ static int RegisterRemoteEndpoint(const IpcContext *context, SvcIdentity *identi
     IpcIoPushUint32(&req, OP_POST);
     uint32 retry = 0;
     while (retry < MAX_RETRY_TIMES) {
+        printf("HUAWEI_LOG: %s, %s, %d,pid:%d,tid:%ld\r\n", __func__, __FILE__, __LINE__, getpid(),(long int)syscall(224));
         ++retry;
         IpcIo reply;
         void *replyBuf = NULL;
