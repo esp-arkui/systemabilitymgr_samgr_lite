@@ -16,7 +16,7 @@
 #include "common.h"
 #include <cmsis_os.h>
 
-extern void *osThreadGetArgument(void);
+
 
 MutexId MUTEX_InitValue()
 {
@@ -62,7 +62,7 @@ int THREAD_Total(void)
 
 void *THREAD_GetThreadLocal(void)
 {
-    return osThreadGetArgument();
+    return ThreadGetArgument();
 }
 
 void THREAD_SetThreadLocal(const void *local)
