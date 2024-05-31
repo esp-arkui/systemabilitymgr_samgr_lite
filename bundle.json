@@ -18,6 +18,9 @@
         "adapted_system_type": [
             "small"
         ],
+        "features":[
+            "enable_ohos_systemabilitymgr_samgr_lite_rpc_mini = false"
+        ],
         "adapted_kernel": [
             "liteos_a",
             "liteos_m",
