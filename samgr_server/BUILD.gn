@@ -13,7 +13,7 @@
 
 import("../config.gni")
 
-if (!enable_ohos_systemabilitymgr_samgr_lite_rpc_mini) {
+if (!samgr_lite_enable_ohos_systemabilitymgr_rpc_mini) {
   shared_library("server") {
     sources = [ "source/samgr_server_rpc.c" ]
 

@@ -13,7 +13,7 @@
 
 import("../config.gni")
 
-if (!enable_ohos_systemabilitymgr_samgr_lite_rpc_mini) {
+if (!samgr_lite_enable_ohos_systemabilitymgr_rpc_mini) {
   config("endpoint_public") {
     include_dirs = [
       "../samgr/adapter",
