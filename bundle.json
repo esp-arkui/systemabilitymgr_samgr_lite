@@ -18,6 +18,10 @@
         "adapted_system_type": [
             "small"
         ],
+        "features":[
+            "samgr_lite_enable_ohos_systemabilitymgr_rpc_mini = false",
+            "samgr_lite_config_ohos_systemabilitymgr_shared_task_size = 2048"
+        ],
         "adapted_kernel": [
             "liteos_a",
             "liteos_m",
